@@ -85,12 +85,15 @@
   }
   .btn-add:hover { background: #4f46e5; }
 
-  .filters {
+  .toolbar {
     display: flex;
-    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
     padding: 16px 24px 0;
     flex-wrap: wrap;
+    gap: 10px;
   }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; }
   .filter-btn {
     background: #fff;
     border: 1.5px solid #e4e4e7;
@@ -103,12 +106,94 @@
   }
   .filter-btn.active { background: #18181b; color: #fff; border-color: #18181b; }
 
+  .layout-toggle {
+    display: flex;
+    gap: 4px;
+    background: #fff;
+    border: 1.5px solid #e4e4e7;
+    border-radius: 10px;
+    padding: 3px;
+  }
+  .layout-btn {
+    background: none;
+    border: none;
+    border-radius: 7px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #71717a;
+    line-height: 1;
+    transition: background 0.1s;
+  }
+  .layout-btn.active { background: #18181b; color: #fff; }
+
+  /* GRID LAYOUT */
   .posts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 20px;
     padding: 20px 24px 40px;
   }
+
+  /* LIST LAYOUT */
+  .posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 16px 24px 40px;
+  }
+  .list-item {
+    background: #fff;
+    border: 1px solid #e4e4e7;
+    border-bottom: none;
+    display: grid;
+    grid-template-columns: 160px 110px auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    transition: background 0.1s;
+  }
+  .list-item:first-child { border-radius: 12px 12px 0 0; }
+  .list-item:last-child { border-radius: 0 0 12px 12px; border-bottom: 1px solid #e4e4e7; }
+  .list-item:only-child { border-radius: 12px; border-bottom: 1px solid #e4e4e7; }
+  .list-item:hover { background: #fafafa; }
+  .list-date { font-size: 13px; font-weight: 600; color: #18181b; white-space: nowrap; }
+  .list-date-sub { font-size: 11px; color: #a1a1aa; }
+  .list-badges { display: flex; flex-direction: column; gap: 4px; }
+  .list-preview { font-size: 13px; color: #3f3f46; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .list-reply { font-size: 11px; color: #a1a1aa; white-space: nowrap; }
+  .list-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+  .list-action-btn {
+    background: none;
+    border: 1.5px solid #e4e4e7;
+    border-radius: 7px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #52525b;
+    white-space: nowrap;
+  }
+  .list-action-btn:hover { background: #f4f4f5; }
+  .list-action-btn.danger { color: #ef4444; border-color: #fecaca; }
+  .list-action-btn.danger:hover { background: #fef2f2; }
+  .list-edit-row {
+    grid-column: 1 / -1;
+    padding-top: 8px;
+    display: none;
+  }
+  .list-edit-row textarea {
+    width: 100%;
+    border: 1.5px solid #6366f1;
+    border-radius: 8px;
+    font-size: 13px;
+    padding: 8px 10px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+  }
+  .list-edit-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .list-item.editing { flex-wrap: wrap; }
 
   /* PHONE CARD */
   .post-card {
@@ -396,13 +481,19 @@
     </div>
   </header>
 
-  <div class="filters">
-    <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
-    <button class="filter-btn" onclick="setFilter('pending', this)">Pending</button>
-    <button class="filter-btn" onclick="setFilter('posted', this)">Posted</button>
+  <div class="toolbar">
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" onclick="setFilter('pending', this)">Pending</button>
+      <button class="filter-btn" onclick="setFilter('posted', this)">Posted</button>
+    </div>
+    <div class="layout-toggle">
+      <button class="layout-btn active" id="btn-grid" onclick="setLayout('grid')" title="Grid view">⊞</button>
+      <button class="layout-btn" id="btn-list" onclick="setLayout('list')" title="List view">☰</button>
+    </div>
   </div>
 
-  <div class="posts-grid" id="posts-grid">
+  <div id="posts-grid">
     <div class="loading">Loading posts...</div>
   </div>
 </div>
@@ -436,6 +527,7 @@ const API = '/api/posts'
 let SECRET = ''
 let allPosts = []
 let currentFilter = 'all'
+let currentLayout = localStorage.getItem('lc_layout') || 'grid'
 
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -492,195 +584,74 @@ function setFilter(f, el) {
   render()
 }
 
+function setLayout(l) {
+  currentLayout = l
+  localStorage.setItem('lc_layout', l)
+  document.getElementById('btn-grid').classList.toggle('active', l === 'grid')
+  document.getElementById('btn-list').classList.toggle('active', l === 'list')
+  render()
+}
+
 function render() {
   const posts = currentFilter === 'all' ? allPosts : allPosts.filter(p => p.status === currentFilter)
   const pending = allPosts.filter(p => p.status === 'pending').length
   document.getElementById('post-count').textContent = `${pending} pending`
 
+  document.getElementById('btn-grid').classList.toggle('active', currentLayout === 'grid')
+  document.getElementById('btn-list').classList.toggle('active', currentLayout === 'list')
+
   const grid = document.getElementById('posts-grid')
   if (!posts.length) {
+    grid.className = ''
     grid.innerHTML = '<div class="empty">No posts here.</div>'
     return
   }
 
+  if (currentLayout === 'list') {
+    grid.className = 'posts-list'
+    grid.innerHTML = posts.map(post => {
+      const d = formatDate(post.scheduled_date)
+      const isPending = post.status === 'pending'
+      const slotLabel = (post.slot || 'morning') === 'morning' ? '🌅' : '🌙'
+      const slotClass = (post.slot || 'morning') === 'evening' ? 'evening' : ''
+      return `
+      <div class="list-item" id="card-${post.id}">
+        <div>
+          <div class="list-date">${d.short} <span style="color:#a1a1aa;font-weight:400">${d.day.slice(0,3)}</span></div>
+          <div style="display:flex;gap:4px;margin-top:4px">
+            <span class="badge-slot ${slotClass}" style="font-size:10px">${slotLabel} ${post.slot||'morning'}</span>
+          </div>
+        </div>
+        <span class="badge badge-${post.status}" style="font-size:11px;align-self:center">${post.status}</span>
+        <div class="list-preview" id="body-${post.id}">${escHtml(post.content)}</div>
+        <div style="font-size:11px;color:#a1a1aa;align-self:center;white-space:nowrap">↩ store link</div>
+        <div class="list-actions">
+          ${isPending ? `<button class="list-action-btn" onclick="toggleListEdit(${post.id})">✏️</button>` : ''}
+          ${isPending ? `<button class="list-action-btn danger" onclick="deletePost(${post.id})">🗑</button>` : ''}
+          ${!isPending ? `<button class="list-action-btn" onclick="copyText(${post.id})">📋</button>` : ''}
+        </div>
+        ${isPending ? `
+        <div id="edit-${post.id}" style="grid-column:1/-1;display:none;padding-top:8px;border-top:1px solid #f4f4f5;margin-top:4px">
+          <textarea id="ta-${post.id}" style="width:100%;border:1.5px solid #6366f1;border-radius:8px;font-size:13px;padding:8px 10px;font-family:inherit;resize:vertical;min-height:80px;outline:none" oninput="updateChars(${post.id})">${escHtml(post.content)}</textarea>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button class="btn-save" style="flex:1" onclick="saveEdit(${post.id})">Save</button>
+            <button class="btn-cancel" onclick="cancelEdit(${post.id})">Cancel</button>
+          </div>
+        </div>` : ''}
+      </div>`
+    }).join('')
+    return
+  }
+
+  // GRID view
+  grid.className = 'posts-grid'
   grid.innerHTML = posts.map(post => {
     const d = formatDate(post.scheduled_date)
     const chars = post.content.length
     const over = chars > 500
     const isPending = post.status === 'pending'
-
     const slotLabel = (post.slot || 'morning') === 'morning' ? '🌅 Morning' : '🌙 Evening'
     const slotClass = (post.slot || 'morning') === 'evening' ? 'evening' : ''
 
     return `
-    <div class="post-card" id="card-${post.id}">
-      <div class="card-header">
-        <div>
-          <div class="card-date">${d.full}</div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <span class="badge-slot ${slotClass}">${slotLabel}</span>
-          <span class="badge badge-${post.status}">${post.status}</span>
-        </div>
-      </div>
-
-      <div class="threads-preview">
-        <div class="threads-meta">
-          <div class="avatar">🕯️</div>
-          <span class="handle">latviancandles_store</span>
-        </div>
-        <div class="threads-body" id="body-${post.id}">${escHtml(post.content)}</div>
-      </div>
-      <div class="char-count ${over ? 'over' : ''}" id="chars-${post.id}">${chars}/500 characters</div>
-
-      <div class="reply-thread">
-        <div class="reply-line-col">
-          <div class="reply-vline"></div>
-          <div class="reply-avatar">🕯️</div>
-        </div>
-        <div class="reply-content">
-          <div class="reply-handle">latviancandles_store</div>
-          <div class="reply-text">Our full collection is at <a href="https://latviancandles.store" target="_blank">latviancandles.store</a></div>
-        </div>
-      </div>
-
-      ${isPending ? `
-      <div class="edit-area" id="edit-${post.id}">
-        <textarea id="ta-${post.id}" oninput="updateChars(${post.id})">${escHtml(post.content)}</textarea>
-        <div class="edit-actions">
-          <button class="btn-save" onclick="saveEdit(${post.id})">Save</button>
-          <button class="btn-cancel" onclick="cancelEdit(${post.id})">Cancel</button>
-        </div>
-      </div>` : ''}
-
-      <div class="card-actions">
-        ${isPending ? `<button class="action-btn" onclick="toggleEdit(${post.id})">✏️ Edit</button>` : ''}
-        ${isPending ? `<button class="action-btn danger" onclick="deletePost(${post.id})">🗑 Delete</button>` : ''}
-        ${!isPending ? `<button class="action-btn" onclick="copyText(${post.id})">📋 Copy</button>` : ''}
-      </div>
-    </div>`
-  }).join('')
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')
-}
-
-function toggleEdit(id) {
-  const ea = document.getElementById(`edit-${id}`)
-  const showing = ea.style.display === 'block'
-  ea.style.display = showing ? 'none' : 'block'
-  if (!showing) {
-    const post = allPosts.find(p => p.id === id)
-    document.getElementById(`ta-${id}`).value = post.content
-    updateChars(id)
-  }
-}
-
-function cancelEdit(id) {
-  document.getElementById(`edit-${id}`).style.display = 'none'
-}
-
-function updateChars(id) {
-  const ta = document.getElementById(`ta-${id}`)
-  const count = document.getElementById(`chars-${id}`)
-  const n = ta.value.length
-  count.textContent = `${n}/500 characters`
-  count.className = `char-count ${n > 500 ? 'over' : ''}`
-}
-
-async function saveEdit(id) {
-  const content = document.getElementById(`ta-${id}`).value.trim()
-  if (!content) return
-
-  const res = await fetch(`/api/posts`, {
-    method: 'PATCH',
-    headers: { Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, content })
-  })
-
-  if (res.ok) {
-    const post = allPosts.find(p => p.id === id)
-    post.content = content
-    document.getElementById(`body-${id}`).innerHTML = escHtml(content)
-    document.getElementById(`edit-${id}`).style.display = 'none'
-    updateChars(id)
-    showToast('Saved!')
-  } else {
-    showToast('Save failed')
-  }
-}
-
-async function deletePost(id) {
-  if (!confirm('Delete this post?')) return
-  const res = await fetch(`${API}?id=${id}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${SECRET}` }
-  })
-  if (res.ok) {
-    allPosts = allPosts.filter(p => p.id !== id)
-    render()
-    showToast('Deleted')
-  }
-}
-
-function copyText(id) {
-  const post = allPosts.find(p => p.id === id)
-  navigator.clipboard.writeText(post.content)
-  showToast('Copied!')
-}
-
-function openNewModal() {
-  const today = new Date()
-  const yyyy = today.getFullYear()
-  const mm = String(today.getMonth()+1).padStart(2,'0')
-  const dd = String(today.getDate()).padStart(2,'0')
-  document.getElementById('new-date').value = `${yyyy}-${mm}-${dd}`
-  document.getElementById('new-content').value = ''
-  document.getElementById('new-image').value = ''
-  document.getElementById('new-modal').classList.add('open')
-}
-
-function closeNewModal() {
-  document.getElementById('new-modal').classList.remove('open')
-}
-
-async function saveNewPost() {
-  const date = document.getElementById('new-date').value
-  const content = document.getElementById('new-content').value.trim()
-  const slot = document.getElementById('new-slot').value
-  const image_url = document.getElementById('new-image').value.trim() || null
-
-  if (!date || !content) { showToast('Date and content required'); return }
-
-  const res = await fetch(API, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ scheduled_date: date, content, image_url, slot, status: 'pending' })
-  })
-
-  if (res.ok) {
-    const newPost = await res.json()
-    allPosts.push(newPost)
-    allPosts.sort((a,b) => a.scheduled_date.localeCompare(b.scheduled_date))
-    closeNewModal()
-    render()
-    showToast('Post added!')
-  } else {
-    showToast('Failed to save')
-  }
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast')
-  t.textContent = msg
-  t.classList.add('show')
-  setTimeout(() => t.classList.remove('show'), 2000)
-}
-
-document.getElementById('new-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('new-modal')) closeNewModal()
-})
-</script>
-</body>
-</html>
+    <div class="po
