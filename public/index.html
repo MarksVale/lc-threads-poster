@@ -414,7 +414,7 @@ function toggleReplyEdit(id) {
   el.style.display = open ? 'none' : 'block';
   if (!open) {
     var p=allPosts.find(function(x){return x.id===id;});
-    document.getElementById('reply-ta-'+id).value = (p && p.reply_text) ? p.reply_text : '';
+    document.getElementById('reply-ta-'+id).value = (p && p.reply_text) ? p.reply_text : 'Our full collection is at latviancandles.store';
     document.getElementById('reply-ta-'+id).focus();
   }
 }
