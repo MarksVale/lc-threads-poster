@@ -4,6 +4,15 @@ const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY
 const CRON_SECRET  = process.env.CRON_SECRET
 
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = ''
+    req.on('data', chunk => (data += chunk))
+    req.on('end', () => resolve(data))
+    req.on('error', reject)
+  })
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS')
@@ -28,37 +37,64 @@ export default async function handler(req, res) {
     return res.json(data)
   }
 
+  // Parse body for POST/PATCH
+  let body = {}
+  if (req.method === 'POST' || req.method === 'PATCH') {
+    try {
+      const raw = await readBody(req)
+      body = raw ? JSON.parse(raw) : {}
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid JSON' })
+    }
+  }
+
   // POST — create new post
   if (req.method === 'POST') {
-    const { scheduled_date, content, image_url } = req.body
+    const { scheduled_date, content, image_url, slot, status, reply_text } = body
     if (!scheduled_date || !content) {
       return res.status(400).json({ error: 'scheduled_date and content required' })
     }
     const { data, error } = await supabase
       .from('threads_posts')
-      .insert([{ scheduled_date, content, image_url: image_url || null, status: 'pending' }])
+      .insert([{
+        scheduled_date,
+        content,
+        image_url: image_url || null,
+        slot: slot || 'morning',
+        status: status || 'pending',
+        reply_text: reply_text || null,
+      }])
       .select()
       .single()
     if (error) return res.status(500).json({ error: error.message })
     return res.status(201).json(data)
   }
 
-  // PATCH — update content of a pending post
+  // PATCH — update content, status, or reply_text
   if (req.method === 'PATCH') {
-    const { id, content } = req.body
-    if (!id || !content) return res.status(400).json({ error: 'id and content required' })
+    const { id, content, status, reply_text } = body
+    if (!id) return res.status(400).json({ error: 'id required' })
+
+    const updates = {}
+    if (content !== undefined) updates.content = content
+    if (status !== undefined) updates.status = status
+    if (reply_text !== undefined) updates.reply_text = reply_text
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'Nothing to update' })
+    }
+
     const { data, error } = await supabase
       .from('threads_posts')
-      .update({ content })
+      .update(updates)
       .eq('id', id)
-      .eq('status', 'pending')
       .select()
       .single()
     if (error) return res.status(500).json({ error: error.message })
     return res.json(data)
   }
 
-  // DELETE — remove a pending post
+  // DELETE — remove a post
   if (req.method === 'DELETE') {
     const { id } = req.query
     if (!id) return res.status(400).json({ error: 'Missing id' })
@@ -66,7 +102,6 @@ export default async function handler(req, res) {
       .from('threads_posts')
       .delete()
       .eq('id', id)
-      .eq('status', 'pending')
     if (error) return res.status(500).json({ error: error.message })
     return res.json({ success: true })
   }
