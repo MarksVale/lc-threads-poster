@@ -71,6 +71,11 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
+  // Random delay 0-4 minutes so posts don't land at exactly the same time every day
+  const delaySec = Math.floor(Math.random() * 240)
+  console.log(`Random delay: ${delaySec}s`)
+  await sleep(delaySec * 1000)
+
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
   const today = todayRiga()
   const slot = req.query?.slot || 'morning'
@@ -142,13 +147,3 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       post_id: published.id,
-      preview: post.content.slice(0, 80),
-    })
-
-  } catch (err) {
-    console.error('Posting failed:', err.message)
-
-    await supabase
-      .from('threads_posts')
-      .update({ status: 'failed' })
-      .e

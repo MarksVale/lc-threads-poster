@@ -11,7 +11,7 @@
   ],
   "functions": {
     "api/cron/post-threads.js": {
-      "maxDuration": 60
+      "maxDuration": 300
     }
   }
 }
