@@ -137,7 +137,7 @@
     <p>Post Queue Manager</p>
     <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
     <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
-    <button onclick="login()">Sign in</button>
+    <button id="login-btn">Sign in</button>
     <div class="login-error" id="login-error">Wrong email or password.</div>
   </div>
 </div>
@@ -211,28 +211,34 @@ function escHtml(s) {
 }
 
 async function login() {
-  const email = document.getElementById('login-email').value.trim()
-  const password = document.getElementById('login-password').value
-  if (!email || !password) return
   const errEl = document.getElementById('login-error')
-  errEl.style.display = 'none'
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
-  })
-  if (!res.ok) {
+  try {
+    const email = document.getElementById('login-email').value.trim()
+    const password = document.getElementById('login-password').value
+    if (!email || !password) return
+    errEl.style.display = 'none'
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    if (!res.ok) {
+      errEl.textContent = 'Wrong email or password.'
+      errEl.style.display = 'block'
+      return
+    }
+    const data = await res.json()
+    SECRET = data.token
+    sessionStorage.setItem('lc_secret', SECRET)
+    await loadPosts()
+  } catch(e) {
+    errEl.textContent = 'Error: ' + e.message
     errEl.style.display = 'block'
-    return
   }
-  const { token } = await res.json()
-  SECRET = token
-  sessionStorage.setItem('lc_secret', SECRET)
-  await loadPosts()
 }
 
 async function loadPosts() {
-  const res = await fetch(API, { headers: { Authorization: `Bearer ${SECRET}` } })
+  const res = await fetch(API, { headers: { Authorization: 'Bearer ' + SECRET } })
   if (!res.ok) { sessionStorage.removeItem('lc_secret'); return }
   allPosts = await res.json()
   document.getElementById('login-screen').style.display = 'none'
@@ -240,10 +246,11 @@ async function loadPosts() {
   render()
 }
 
-document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') login() })
-document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-password').focus() })
+document.getElementById('login-btn').addEventListener('click', login)
+document.getElementById('login-password').addEventListener('keydown', function(e) { if (e.key === 'Enter') login() })
+document.getElementById('login-email').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-password').focus() })
 
-const saved = sessionStorage.getItem('lc_secret')
+var saved = sessionStorage.getItem('lc_secret')
 if (saved) { SECRET = saved; loadPosts() }
 
 function setFilter(f, el) {
@@ -332,8 +339,4 @@ function render() {
         </div>
         <div class="threads-body" id="body-${post.id}">${escHtml(post.content)}</div>
       </div>
-      <div class="char-count ${over ? 'over' : ''}" id="chars-${post.id}">${chars}/500 characters</div>
-      <div class="reply-thread">
-        <div class="reply-line-col"><div class="reply-vline"></div><div class="reply-avatar">🕯️</div></div>
-        <div class="reply-content">
-          <div class="reply-handle">latviancandles_s
+      <div class="char-count ${over ? 'over' : ''}" id="chars-${p
