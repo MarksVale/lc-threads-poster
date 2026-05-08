@@ -56,6 +56,9 @@ header h1 { color: #fff; font-size: 18px; font-weight: 700; }
 .reply-handle { font-size: 12px; font-weight: 700; color: #71717a; margin-bottom: 2px; }
 .reply-text { font-size: 12px; color: #71717a; line-height: 1.4; }
 .reply-text a { color: #6366f1; text-decoration: none; }
+.reply-edit-area { padding: 8px 16px 12px; border-top: 1px solid #f4f4f5; display: none; }
+.reply-edit-area input { width: 100%; border: 1.5px solid #6366f1; border-radius: 8px; font-size: 13px; padding: 8px 10px; font-family: inherit; outline: none; color: #18181b; }
+.reply-edit-actions { display: flex; gap: 8px; margin-top: 6px; }
 .edit-area { display: none; padding: 12px 16px; border-top: 1px solid #f4f4f5; }
 .edit-area textarea { width: 100%; border: 1.5px solid #e4e4e7; border-radius: 10px; font-size: 14px; line-height: 1.55; padding: 10px 12px; resize: vertical; min-height: 120px; font-family: inherit; color: #18181b; outline: none; }
 .edit-area textarea:focus { border-color: #6366f1; }
@@ -330,9 +333,14 @@ function render() {
     html += '<div class="threads-meta"><div class="avatar">LC</div><span class="handle">latviancandles_store</span></div>';
     html += '<div class="threads-body" id="body-'+p.id+'">'+esc(p.content)+'</div></div>';
     html += '<div class="char-count'+(chars>500?' over':'')+'" id="chars-'+p.id+'">'+chars+'/500 characters</div>';
+    var replyPreview = p.reply_text || 'Our full collection is at latviancandles.store';
     html += '<div class="reply-thread"><div class="reply-line-col"><div class="reply-vline"></div><div class="reply-avatar">LC</div></div>';
     html += '<div class="reply-content"><div class="reply-handle">latviancandles_store</div>';
-    html += '<div class="reply-text">Our full collection is at <a href="https://latviancandles.store" target="_blank">latviancandles.store</a></div></div></div>';
+    html += '<div class="reply-text" id="reply-preview-'+p.id+'">'+esc(replyPreview)+'</div></div></div>';
+    html += '<div class="reply-edit-area" id="reply-edit-'+p.id+'">';
+    html += '<input type="text" id="reply-ta-'+p.id+'" placeholder="Custom reply text (blank = use daily rotation)" />';
+    html += '<div class="reply-edit-actions"><button class="btn-save" onclick="saveReplyEdit('+p.id+')">Save Reply</button>';
+    html += '<button class="btn-cancel" onclick="cancelReplyEdit('+p.id+')">Cancel</button></div></div>';
     if (ip) {
       html += '<div class="edit-area" id="edit-'+p.id+'">';
       html += '<textarea id="ta-'+p.id+'" oninput="updateChars('+p.id+')"></textarea>';
@@ -342,6 +350,7 @@ function render() {
     html += '<div class="card-actions">';
     if (ip) html += '<button class="action-btn approve" onclick="approvePost('+p.id+')">Approve</button>';
     if (ip) html += '<button class="action-btn" onclick="toggleEdit('+p.id+')">Edit</button>';
+    if (ip||ia) html += '<button class="action-btn" onclick="toggleReplyEdit('+p.id+')">Reply</button>';
     if (ip) html += '<button class="action-btn danger" onclick="deletePost('+p.id+')">Delete</button>';
     if (ia) html += '<button class="action-btn danger" onclick="unapprovePost('+p.id+')">Undo</button>';
     if (p.status==='posted') html += '<button class="action-btn" onclick="copyText('+p.id+')">Copy</button>';
@@ -397,6 +406,35 @@ function copyText(id) {
   var p=allPosts.find(function(x){return x.id===id;});
   if(p) navigator.clipboard.writeText(p.content);
   toast('Copied!');
+}
+function toggleReplyEdit(id) {
+  var el = document.getElementById('reply-edit-'+id);
+  if (!el) return;
+  var open = el.style.display==='block';
+  el.style.display = open ? 'none' : 'block';
+  if (!open) {
+    var p=allPosts.find(function(x){return x.id===id;});
+    document.getElementById('reply-ta-'+id).value = (p && p.reply_text) ? p.reply_text : '';
+    document.getElementById('reply-ta-'+id).focus();
+  }
+}
+function cancelReplyEdit(id) {
+  var el=document.getElementById('reply-edit-'+id);
+  if(el) el.style.display='none';
+}
+function saveReplyEdit(id) {
+  var val = document.getElementById('reply-ta-'+id).value.trim();
+  fetch(API, {method:'PATCH', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({id:id,reply_text:val||null})})
+  .then(function(r){
+    if (r.ok) {
+      var p=allPosts.find(function(x){return x.id===id;});
+      if(p) p.reply_text = val || null;
+      var prev=document.getElementById('reply-preview-'+id);
+      if(prev) prev.textContent = val || 'Our full collection is at latviancandles.store';
+      cancelReplyEdit(id);
+      toast('Reply saved!');
+    } else toast('Save failed');
+  }).catch(function(){ toast('Save failed'); });
 }
 function openNewModal() {
   var t=new Date(), y=t.getFullYear(), m=String(t.getMonth()+1).padStart(2,'0'), d=String(t.getDate()).padStart(2,'0');
