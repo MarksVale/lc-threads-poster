@@ -90,6 +90,51 @@ header h1 { color: #fff; font-size: 18px; font-weight: 700; }
 .list-edit-row { grid-column: 1 / -1; display: none; padding-top: 10px; border-top: 1px solid #f4f4f5; margin-top: 4px; }
 .list-edit-row textarea { width: 100%; border: 1.5px solid #6366f1; border-radius: 8px; font-size: 13px; padding: 8px 10px; font-family: inherit; resize: vertical; min-height: 80px; outline: none; }
 .list-edit-row .edit-actions { margin-top: 6px; }
+
+/* ── Calendar view ─────────────────────────────────────── */
+.calendar-wrap { padding: 20px 24px 40px; }
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.cal-nav h2 { font-size: 20px; font-weight: 700; color: #18181b; }
+.cal-nav-btn { background: #fff; border: 1.5px solid #e4e4e7; border-radius: 8px; padding: 6px 14px; font-size: 14px; font-weight: 600; cursor: pointer; color: #18181b; }
+.cal-nav-btn:hover { background: #f4f4f5; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e4e4e7; border-radius: 12px; overflow: hidden; }
+.cal-day-header { background: #f9f9f9; text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 700; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; }
+.cal-cell { background: #fff; min-height: 110px; padding: 6px; position: relative; vertical-align: top; }
+.cal-cell.other-month { background: #fafafa; }
+.cal-cell.today { background: #fafff5; }
+.cal-num { font-size: 12px; font-weight: 700; color: #a1a1aa; margin-bottom: 4px; }
+.cal-cell.today .cal-num { color: #059669; }
+.cal-chip { border-radius: 6px; padding: 3px 6px; margin-bottom: 3px; font-size: 11px; line-height: 1.35; cursor: pointer; word-break: break-word; position: relative; }
+.cal-chip:hover { filter: brightness(0.93); }
+.cal-chip.pending { background: #fef3c7; color: #92400e; border-left: 3px solid #f59e0b; }
+.cal-chip.approved { background: #dbeafe; color: #1e40af; border-left: 3px solid #6366f1; }
+.cal-chip.posted { background: #d1fae5; color: #065f46; border-left: 3px solid #10b981; }
+.cal-chip.error { background: #fee2e2; color: #991b1b; border-left: 3px solid #ef4444; }
+.cal-chip-slot { font-size: 9px; font-weight: 700; opacity: 0.7; text-transform: uppercase; }
+
+/* ── Pop-over for calendar chip clicks ─────────────────── */
+.cal-popover { display: none; position: fixed; z-index: 300; background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); width: 340px; max-width: 95vw; overflow: hidden; }
+.cal-popover.open { display: block; }
+.pop-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; border-bottom: 1px solid #f4f4f5; }
+.pop-date { font-size: 13px; font-weight: 700; color: #18181b; }
+.pop-close { background: none; border: none; font-size: 18px; cursor: pointer; color: #71717a; line-height: 1; padding: 0 4px; }
+.pop-body { padding: 14px 16px; }
+.pop-content { font-size: 14px; line-height: 1.55; color: #18181b; margin-bottom: 10px; }
+.pop-reply { font-size: 12px; color: #6366f1; margin-bottom: 14px; }
+.pop-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pop-btn { flex: 1; min-width: 70px; background: #f4f4f5; color: #3f3f46; border: none; border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.pop-btn:hover { background: #e4e4e7; }
+.pop-btn.approve { background: #dbeafe; color: #1e40af; }
+.pop-btn.approve:hover { background: #bfdbfe; }
+.pop-btn.danger { background: #fee2e2; color: #991b1b; }
+.pop-btn.danger:hover { background: #fecaca; }
+.pop-edit-area { margin-top: 10px; display: none; }
+.pop-edit-area textarea { width: 100%; border: 1.5px solid #6366f1; border-radius: 8px; font-size: 13px; padding: 8px 10px; font-family: inherit; resize: vertical; min-height: 80px; outline: none; color: #18181b; }
+.pop-edit-area .edit-actions { margin-top: 6px; }
+.pop-reply-edit { margin-top: 8px; display: none; }
+.pop-reply-edit input { width: 100%; border: 1.5px solid #6366f1; border-radius: 8px; font-size: 13px; padding: 8px 10px; font-family: inherit; outline: none; color: #18181b; }
+.pop-reply-edit .edit-actions { margin-top: 6px; }
+
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
 .modal-overlay.open { display: flex; }
 .modal { background: #fff; border-radius: 16px; width: 480px; max-width: 95vw; padding: 28px; }
@@ -137,6 +182,7 @@ header h1 { color: #fff; font-size: 18px; font-weight: 700; }
     <div class="layout-toggle">
       <button class="layout-btn" id="btn-grid">Grid</button>
       <button class="layout-btn" id="btn-list">List</button>
+      <button class="layout-btn" id="btn-cal">Cal</button>
     </div>
   </div>
   <div id="posts-grid"><div class="loading">Loading posts...</div></div>
@@ -163,6 +209,33 @@ header h1 { color: #fff; font-size: 18px; font-weight: 700; }
   </div>
 </div>
 
+<!-- Calendar pop-over -->
+<div class="cal-popover" id="cal-popover">
+  <div class="pop-header">
+    <div class="pop-date" id="pop-date"></div>
+    <button class="pop-close" id="pop-close">&#x2715;</button>
+  </div>
+  <div class="pop-body">
+    <div class="pop-content" id="pop-content"></div>
+    <div class="pop-reply" id="pop-reply"></div>
+    <div class="pop-edit-area" id="pop-edit-area">
+      <textarea id="pop-ta"></textarea>
+      <div class="edit-actions">
+        <button class="btn-save" id="pop-save-edit">Save</button>
+        <button class="btn-cancel" id="pop-cancel-edit">Cancel</button>
+      </div>
+    </div>
+    <div class="pop-reply-edit" id="pop-reply-edit-area">
+      <input type="text" id="pop-reply-ta" placeholder="Custom reply text..." />
+      <div class="edit-actions">
+        <button class="btn-save" id="pop-save-reply">Save Reply</button>
+        <button class="btn-cancel" id="pop-cancel-reply">Cancel</button>
+      </div>
+    </div>
+    <div class="pop-actions" id="pop-actions"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -171,13 +244,21 @@ var SECRET = '';
 var allPosts = [];
 var currentFilter = 'all';
 var currentLayout = 'grid';
+var calYear = new Date().getFullYear();
+var calMonth = new Date().getMonth();
+var popPostId = null;
 try { currentLayout = localStorage.getItem('lc_layout') || 'grid'; } catch(e) {}
+try { var sm = localStorage.getItem('lc_cal_month'); if(sm) { var sp=sm.split('-'); calYear=+sp[0]; calMonth=+sp[1]; } } catch(e) {}
 
 var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function esc(s) {
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').split('\n').join('<br>');
+}
+function escAttr(s) {
+  return (s || '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function fmtDate(s) {
@@ -254,10 +335,40 @@ document.getElementById('f-approved').addEventListener('click', function(){ setF
 document.getElementById('f-posted').addEventListener('click', function(){ setFilter('posted',this); });
 document.getElementById('btn-grid').addEventListener('click', function(){ setLayout('grid'); });
 document.getElementById('btn-list').addEventListener('click', function(){ setLayout('list'); });
+document.getElementById('btn-cal').addEventListener('click', function(){ setLayout('cal'); });
 document.getElementById('btn-new-post').addEventListener('click', openNewModal);
 document.getElementById('btn-cancel-modal').addEventListener('click', closeNewModal);
 document.getElementById('btn-save-modal').addEventListener('click', saveNewPost);
 document.getElementById('new-modal').addEventListener('click', function(e){ if(e.target===this) closeNewModal(); });
+document.getElementById('pop-close').addEventListener('click', closePopover);
+document.getElementById('pop-cancel-edit').addEventListener('click', function(){ document.getElementById('pop-edit-area').style.display='none'; });
+document.getElementById('pop-cancel-reply').addEventListener('click', function(){ document.getElementById('pop-reply-edit-area').style.display='none'; });
+document.getElementById('pop-save-edit').addEventListener('click', function(){
+  var content = document.getElementById('pop-ta').value.trim();
+  if (!content || !popPostId) return;
+  fetch(API, {method:'PATCH', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({id:popPostId,content:content})})
+  .then(function(r){
+    if(r.ok){
+      var p=allPosts.find(function(x){return x.id===popPostId;});
+      if(p){ p.content=content; document.getElementById('pop-content').innerHTML=esc(content); }
+      document.getElementById('pop-edit-area').style.display='none';
+      render(); toast('Saved!');
+    } else toast('Save failed');
+  });
+});
+document.getElementById('pop-save-reply').addEventListener('click', function(){
+  var val = document.getElementById('pop-reply-ta').value.trim();
+  if (!popPostId) return;
+  fetch(API, {method:'PATCH', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({id:popPostId,reply_text:val||null})})
+  .then(function(r){
+    if(r.ok){
+      var p=allPosts.find(function(x){return x.id===popPostId;});
+      if(p){ p.reply_text=val||null; document.getElementById('pop-reply').textContent='Reply: '+(val||'Our full collection is at latviancandles.store'); }
+      document.getElementById('pop-reply-edit-area').style.display='none';
+      render(); toast('Reply saved!');
+    } else toast('Save failed');
+  });
+});
 
 function setFilter(f, el) {
   currentFilter = f;
@@ -271,6 +382,7 @@ function setLayout(l) {
   try { localStorage.setItem('lc_layout', l); } catch(e) {}
   document.getElementById('btn-grid').classList.toggle('active', l==='grid');
   document.getElementById('btn-list').classList.toggle('active', l==='list');
+  document.getElementById('btn-cal').classList.toggle('active', l==='cal');
   render();
 }
 
@@ -280,6 +392,9 @@ function render() {
   document.getElementById('post-count').textContent = pending+' pending';
   document.getElementById('btn-grid').classList.toggle('active', currentLayout==='grid');
   document.getElementById('btn-list').classList.toggle('active', currentLayout==='list');
+  document.getElementById('btn-cal').classList.toggle('active', currentLayout==='cal');
+
+  if (currentLayout === 'cal') { renderCalendar(posts); return; }
 
   var grid = document.getElementById('posts-grid');
   if (!posts.length) { grid.className=''; grid.innerHTML='<div class="empty">No posts here.</div>'; return; }
@@ -324,6 +439,7 @@ function render() {
     var ip = p.status==='pending', ia = p.status==='approved';
     var slot = p.slot || 'morning';
     var sc = slot==='evening' ? ' evening' : '';
+    var replyPreview = p.reply_text || 'Our full collection is at latviancandles.store';
     html += '<div class="post-card" id="card-'+p.id+'">';
     html += '<div class="card-header"><div class="card-date">'+d.full+'</div>';
     html += '<div style="display:flex;gap:6px;align-items:center">';
@@ -333,7 +449,6 @@ function render() {
     html += '<div class="threads-meta"><div class="avatar">LC</div><span class="handle">latviancandles_store</span></div>';
     html += '<div class="threads-body" id="body-'+p.id+'">'+esc(p.content)+'</div></div>';
     html += '<div class="char-count'+(chars>500?' over':'')+'" id="chars-'+p.id+'">'+chars+'/500 characters</div>';
-    var replyPreview = p.reply_text || 'Our full collection is at latviancandles.store';
     html += '<div class="reply-thread"><div class="reply-line-col"><div class="reply-vline"></div><div class="reply-avatar">LC</div></div>';
     html += '<div class="reply-content"><div class="reply-handle">latviancandles_store</div>';
     html += '<div class="reply-text" id="reply-preview-'+p.id+'">'+esc(replyPreview)+'</div></div></div>';
@@ -358,6 +473,151 @@ function render() {
   }
   grid.innerHTML = html;
 }
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
+
+function renderCalendar(filteredPosts) {
+  var grid = document.getElementById('posts-grid');
+  grid.className = '';
+
+  // Build a date→posts map
+  var byDate = {};
+  for (var i=0; i<filteredPosts.length; i++) {
+    var p = filteredPosts[i];
+    if (!byDate[p.scheduled_date]) byDate[p.scheduled_date] = [];
+    byDate[p.scheduled_date].push(p);
+  }
+
+  var firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+  var daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  var todayStr = new Date().toISOString().split('T')[0];
+
+  var html = '<div class="calendar-wrap">';
+  html += '<div class="cal-nav">';
+  html += '<button class="cal-nav-btn" id="cal-prev">&#8249; Prev</button>';
+  html += '<h2>'+MONTHS_LONG[calMonth]+' '+calYear+'</h2>';
+  html += '<button class="cal-nav-btn" id="cal-next">Next &#8250;</button>';
+  html += '</div>';
+  html += '<div class="cal-grid">';
+
+  var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  for (var d=0; d<7; d++) {
+    html += '<div class="cal-day-header">'+dayNames[d]+'</div>';
+  }
+
+  // Blanks before month starts
+  for (var b=0; b<firstDay; b++) {
+    html += '<div class="cal-cell other-month"></div>';
+  }
+
+  for (var day=1; day<=daysInMonth; day++) {
+    var mm = String(calMonth+1).padStart(2,'0');
+    var dd = String(day).padStart(2,'0');
+    var dateStr = calYear+'-'+mm+'-'+dd;
+    var isToday = dateStr===todayStr;
+    html += '<div class="cal-cell'+(isToday?' today':'')+'">';
+    html += '<div class="cal-num">'+day+'</div>';
+    var dayPosts = byDate[dateStr] || [];
+    for (var j=0; j<dayPosts.length; j++) {
+      var pp = dayPosts[j];
+      var slotLabel = (pp.slot==='evening') ? 'Eve' : 'Morn';
+      var snippet = (pp.content||'').slice(0,50)+(pp.content&&pp.content.length>50?'...':'');
+      html += '<div class="cal-chip '+pp.status+'" onclick="openPopover('+pp.id+',event)">';
+      html += '<div class="cal-chip-slot">'+slotLabel+'</div>';
+      html += esc(snippet);
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  // Trailing blanks to complete the last week row
+  var totalCells = firstDay + daysInMonth;
+  var remainder = totalCells % 7;
+  if (remainder > 0) {
+    for (var t=0; t<(7-remainder); t++) {
+      html += '<div class="cal-cell other-month"></div>';
+    }
+  }
+
+  html += '</div></div>';
+  grid.innerHTML = html;
+
+  document.getElementById('cal-prev').addEventListener('click', function(){
+    calMonth--;
+    if (calMonth < 0) { calMonth=11; calYear--; }
+    try { localStorage.setItem('lc_cal_month', calYear+'-'+calMonth); } catch(e){}
+    render();
+  });
+  document.getElementById('cal-next').addEventListener('click', function(){
+    calMonth++;
+    if (calMonth > 11) { calMonth=0; calYear++; }
+    try { localStorage.setItem('lc_cal_month', calYear+'-'+calMonth); } catch(e){}
+    render();
+  });
+}
+
+// ── Pop-over ──────────────────────────────────────────────────────────────────
+
+function openPopover(id, evt) {
+  evt.stopPropagation();
+  popPostId = id;
+  var p = allPosts.find(function(x){ return x.id===id; });
+  if (!p) return;
+  var pop = document.getElementById('cal-popover');
+  var d = fmtDate(p.scheduled_date);
+  var slot = (p.slot==='evening') ? 'Evening' : 'Morning';
+  document.getElementById('pop-date').textContent = d.full+' · '+slot+' · '+p.status.toUpperCase();
+  document.getElementById('pop-content').innerHTML = esc(p.content);
+  document.getElementById('pop-reply').textContent = 'Reply: '+(p.reply_text || 'Our full collection is at latviancandles.store');
+  document.getElementById('pop-edit-area').style.display='none';
+  document.getElementById('pop-reply-edit-area').style.display='none';
+
+  var ip = p.status==='pending', ia = p.status==='approved';
+  var actHtml = '';
+  if (ip) actHtml += '<button class="pop-btn approve" onclick="approvePost('+id+');closePopover()">Approve</button>';
+  if (ip) actHtml += '<button class="pop-btn" onclick="showPopEdit()">Edit</button>';
+  if (ip||ia) actHtml += '<button class="pop-btn" onclick="showPopReply()">Reply</button>';
+  if (ia) actHtml += '<button class="pop-btn danger" onclick="unapprovePost('+id+');closePopover()">Undo</button>';
+  if (ip) actHtml += '<button class="pop-btn danger" onclick="deletePost('+id+');closePopover()">Delete</button>';
+  if (p.status==='posted') actHtml += '<button class="pop-btn" onclick="copyText('+id+');closePopover()">Copy</button>';
+  document.getElementById('pop-actions').innerHTML = actHtml;
+
+  // Position near click
+  var x = evt.clientX, y = evt.clientY;
+  var pw = 340, ph = 300;
+  var left = Math.min(x+10, window.innerWidth-pw-16);
+  var top = Math.min(y+10, window.innerHeight-ph-16);
+  pop.style.left = left+'px';
+  pop.style.top = top+'px';
+  pop.classList.add('open');
+}
+
+function showPopEdit() {
+  var p = allPosts.find(function(x){ return x.id===popPostId; });
+  if (!p) return;
+  document.getElementById('pop-ta').value = p.content || '';
+  document.getElementById('pop-edit-area').style.display='block';
+  document.getElementById('pop-ta').focus();
+}
+
+function showPopReply() {
+  var p = allPosts.find(function(x){ return x.id===popPostId; });
+  document.getElementById('pop-reply-ta').value = (p && p.reply_text) ? p.reply_text : 'Our full collection is at latviancandles.store';
+  document.getElementById('pop-reply-edit-area').style.display='block';
+  document.getElementById('pop-reply-ta').focus();
+}
+
+function closePopover() {
+  document.getElementById('cal-popover').classList.remove('open');
+  popPostId = null;
+}
+
+document.addEventListener('click', function(e){
+  var pop = document.getElementById('cal-popover');
+  if (pop.classList.contains('open') && !pop.contains(e.target)) closePopover();
+});
+
+// ── Shared actions ────────────────────────────────────────────────────────────
 
 function toggleEdit(id) {
   var ea = document.getElementById('edit-'+id);
