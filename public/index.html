@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Latvian Candles — Post Queue</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+    color: #1a1a1a;
+  }
+
+  #login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #18181b;
+  }
+  .login-box {
+    background: #27272a;
+    border-radius: 16px;
+    padding: 40px;
+    width: 340px;
+    text-align: center;
+  }
+  .login-box h1 { color: #fff; font-size: 22px; margin-bottom: 6px; }
+  .login-box p { color: #a1a1aa; font-size: 14px; margin-bottom: 28px; }
+  .login-box input {
+    width: 100%;
+    background: #3f3f46;
+    border: 1px solid #52525b;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 15px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    outline: none;
+  }
+  .login-box input:focus { border-color: #6366f1; }
+  .login-box button {
+    width: 100%;
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 13px;
+    cursor: pointer;
+  }
+  .login-box button:hover { background: #4f46e5; }
+  .login-error { color: #f87171; font-size: 13px; margin-top: 10px; display: none; }
+
+  #app { display: none; }
+
+  header {
+    background: #18181b;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { color: #fff; font-size: 18px; font-weight: 700; }
+  header span { color: #a1a1aa; font-size: 13px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .btn-add {
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-add:hover { background: #4f46e5; }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    padding: 16px 24px 0;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: #fff;
+    border: 1.5px solid #e4e4e7;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #52525b;
+  }
+  .filter-btn.active { background: #18181b; color: #fff; border-color: #18181b; }
+
+  .posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+    padding: 20px 24px 40px;
+  }
+
+  .post-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    transition: box-shadow 0.15s;
+  }
+  .post-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f4f4f5;
+  }
+  .card-date { font-size: 13px; font-weight: 600; color: #18181b; }
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-pending { background: #fef3c7; color: #92400e; }
+  .badge-posted  { background: #d1fae5; color: #065f46; }
+
+  .threads-preview {
+    padding: 16px;
+    background: #fff;
+  }
+  .threads-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .handle { font-size: 13px; font-weight: 700; color: #18181b; }
+  .threads-body {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #18181b;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding-left: 46px;
+  }
+  .char-count {
+    padding: 6px 16px 10px 62px;
+    font-size: 11px;
+    color: #a1a1aa;
+  }
+  .char-count.over { color: #ef4444; }
+
+  .edit-area {
+    display: none;
+    padding: 12px 16px;
+    border-top: 1px solid #f4f4f5;
+  }
+  .edit-area textarea {
+    width: 100%;
+    border: 1.5px solid #e4e4e7;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 10px 12px;
+    resize: vertical;
+    min-height: 120px;
+    font-family: inherit;
+    color: #18181b;
+    outline: none;
+  }
+  .edit-area textarea:focus { border-color: #6366f1; }
+  .edit-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .btn-save {
+    background: #18181b;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1;
+  }
+  .btn-save:hover { background: #3f3f46; }
+  .btn-cancel {
+    background: #f4f4f5;
+    color: #52525b;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid #f4f4f5;
+  }
+  .action-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 11px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #71717a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: background 0.1s;
+  }
+  .action-btn:hover { background: #f9f9f9; }
+  .action-btn + .action-btn { border-left: 1px solid #f4f4f5; }
+  .action-btn.danger { color: #ef4444; }
+  .action-btn.danger:hover { background: #fef2f2; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 480px;
+    max-width: 95vw;
+    padding: 28px;
+  }
+  .modal h2 { font-size: 18px; margin-bottom: 20px; }
+  .modal label { font-size: 13px; font-weight: 600; color: #52525b; display: block; margin-bottom: 5px; }
+  .modal input, .modal textarea {
+    width: 100%;
+    border: 1.5px solid #e4e4e7;
+    border-radius: 10px;
+    font-size: 14px;
+    padding: 10px 12px;
+    font-family: inherit;
+    color: #18181b;
+    outline: none;
+    margin-bottom: 16px;
+  }
+  .modal input:focus, .modal textarea:focus { border-color: #6366f1; }
+  .modal textarea { min-height: 120px; resize: vertical; }
+  .modal-actions { display: flex; gap: 10px; }
+  .btn-primary {
+    flex: 1;
+    background: #18181b;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-secondary {
+    background: #f4f4f5;
+    color: #52525b;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .empty { text-align: center; padding: 60px 20px; color: #a1a1aa; }
+  .loading { text-align: center; padding: 60px 20px; color: #a1a1aa; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #18181b;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Latvian Candles</h1>
+    <p>Post Queue Manager</p>
+    <input type="password" id="secret-input" placeholder="Enter your secret key" />
+    <button onclick="login()">Sign in</button>
+    <div class="login-error" id="login-error">Wrong key, try again.</div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div><h1>Post Queue</h1></div>
+    <div class="header-right">
+      <span id="post-count"></span>
+      <button class="btn-add" onclick="openNewModal()">+ New post</button>
+    </div>
+  </header>
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+    <button class="filter-btn" onclick="setFilter('pending', this)">Pending</button>
+    <button class="filter-btn" onclick="setFilter('posted', this)">Posted</button>
+  </div>
+  <div class="posts-grid" id="posts-grid"><div class="loading">Loading posts...</div></div>
+</div>
+
+<div class="modal-overlay" id="new-modal">
+  <div class="modal">
+    <h2>New post</h2>
+    <label>Date</label>
+    <input type="date" id="new-date" />
+    <label>Content</label>
+    <textarea id="new-content" placeholder="Write your post..."></textarea>
+    <label>Image URL (optional)</label>
+    <input type="url" id="new-image" placeholder="https://..." />
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeNewModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveNewPost()">Save to queue</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api/posts';
+let SECRET = '';
+let allPosts = [];
+let currentFilter = 'all';
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function formatDate(s) {
+  const [y,m,d] = s.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  return DAYS[dt.getDay()] + ', ' + d + ' ' + MONTHS[m-1] + ' ' + y;
+}
+
+async function login() {
+  const val = document.getElementById('secret-input').value.trim();
+  if (!val) return;
+  SECRET = val;
+  const r = await fetch(API, {headers:{Authorization:'Bearer '+SECRET}});
+  if (r.status === 401) { document.getElementById('login-error').style.display='block'; SECRET=''; return; }
+  sessionStorage.setItem('lc_secret', SECRET);
+  allPosts = await r.json();
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  render();
+}
+
+document.getElementById('secret-input').addEventListener('keydown', e => { if (e.key==='Enter') login(); });
+
+const saved = sessionStorage.getItem('lc_secret');
+if (saved) {
+  SECRET = saved;
+  fetch(API, {headers:{Authorization:'Bearer '+SECRET}}).then(async r => {
+    if (r.ok) { allPosts = await r.json(); document.getElementById('login-screen').style.display='none'; document.getElementById('app').style.display='block'; render(); }
+    else sessionStorage.removeItem('lc_secret');
+  });
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function render() {
+  const posts = currentFilter==='all' ? allPosts : allPosts.filter(p => p.status===currentFilter);
+  document.getElementById('post-count').textContent = allPosts.filter(p=>p.status==='pending').length + ' pending';
+  const grid = document.getElementById('posts-grid');
+  if (!posts.length) { grid.innerHTML = '<div class="empty">No posts here.</div>'; return; }
+  grid.innerHTML = posts.map(post => {
+    const chars = post.content.length;
+    const over = chars > 500;
+    const ip = post.status === 'pending';
+    return '<div class="post-card" id="card-'+post.id+'">' +
+      '<div class="card-header"><div class="card-date">'+formatDate(post.scheduled_date)+'</div>' +
+      '<span class="badge badge-'+post.status+'">'+post.status+'</span></div>' +
+      '<div class="threads-preview"><div class="threads-meta"><div class="avatar">&#x1F56F;</div>' +
+      '<span class="handle">latviancandles_store</span></div>' +
+      '<div class="threads-body" id="body-'+post.id+'">'+escHtml(post.content)+'</div></div>' +
+      '<div class="char-count'+(over?' over':'')+'" id="chars-'+post.id+'">'+chars+'/500 characters</div>' +
+      (ip ? '<div class="edit-area" id="edit-'+post.id+'"><textarea id="ta-'+post.id+'" oninput="updateChars('+post.id+')">'+escHtml(post.content)+'</textarea>' +
+        '<div class="edit-actions"><button class="btn-save" onclick="saveEdit('+post.id+')">Save</button>' +
+        '<button class="btn-cancel" onclick="cancelEdit('+post.id+')">Cancel</button></div></div>' : '') +
+      '<div class="card-actions">' +
+      (ip ? '<button class="action-btn" onclick="toggleEdit('+post.id+')">Edit</button>' : '') +
+      (ip ? '<button class="action-btn danger" onclick="deletePost('+post.id+')">Delete</button>' : '') +
+      (!ip ? '<button class="action-btn" onclick="copyText('+post.id+')">Copy</button>' : '') +
+      '</div></div>';
+  }).join('');
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/
+/g,'<br>'); }
+
+function toggleEdit(id) {
+  const ea = document.getElementById('edit-'+id);
+  const showing = ea.style.display==='block';
+  ea.style.display = showing ? 'none' : 'block';
+  if (!showing) { document.getElementById('ta-'+id).value = allPosts.find(p=>p.id===id).content; updateChars(id); }
+}
+function cancelEdit(id) { document.getElementById('edit-'+id).style.display='none'; }
+function updateChars(id) {
+  const n = document.getElementById('ta-'+id).value.length;
+  const c = document.getElementById('chars-'+id);
+  c.textContent = n+'/500 characters'; c.className = 'char-count'+(n>500?' over':'');
+}
+
+async function saveEdit(id) {
+  const content = document.getElementById('ta-'+id).value.trim();
+  if (!content) return;
+  const r = await fetch(API, {method:'PATCH', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({id, content})});
+  if (r.ok) { allPosts.find(p=>p.id===id).content=content; document.getElementById('body-'+id).innerHTML=escHtml(content); document.getElementById('edit-'+id).style.display='none'; updateChars(id); showToast('Saved!'); }
+  else showToast('Save failed');
+}
+
+async function deletePost(id) {
+  if (!confirm('Delete this post?')) return;
+  const r = await fetch(API+'?id='+id, {method:'DELETE', headers:{Authorization:'Bearer '+SECRET}});
+  if (r.ok) { allPosts = allPosts.filter(p=>p.id!==id); render(); showToast('Deleted'); }
+}
+
+function copyText(id) { navigator.clipboard.writeText(allPosts.find(p=>p.id===id).content); showToast('Copied!'); }
+
+function openNewModal() {
+  const t = new Date(); const mm = String(t.getMonth()+1).padStart(2,'0'); const dd = String(t.getDate()).padStart(2,'0');
+  document.getElementById('new-date').value = t.getFullYear()+'-'+mm+'-'+dd;
+  document.getElementById('new-content').value=''; document.getElementById('new-image').value='';
+  document.getElementById('new-modal').classList.add('open');
+}
+function closeNewModal() { document.getElementById('new-modal').classList.remove('open'); }
+
+async function saveNewPost() {
+  const date = document.getElementById('new-date').value;
+  const content = document.getElementById('new-content').value.trim();
+  const image_url = document.getElementById('new-image').value.trim() || null;
+  if (!date || !content) { showToast('Date and content required'); return; }
+  const r = await fetch(API, {method:'POST', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({scheduled_date:date, content, image_url, status:'pending'})});
+  if (r.ok) { const np = await r.json(); allPosts.push(np); allPosts.sort((a,b)=>a.scheduled_date.localeCompare(b.scheduled_date)); closeNewModal(); render(); showToast('Post added!'); }
+  else showToast('Failed to save');
+}
+
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+document.getElementById('new-modal').addEventListener('click', e => { if (e.target===document.getElementById('new-modal')) closeNewModal(); });
+</script>
+</body>
+  </html>
