@@ -798,8 +798,10 @@ function renderProducts() {
   allProducts.forEach(function(p) {
     var lastPosted = p.last_posted_at ? 'Last posted: ' + fmtDate(p.last_posted_at) : 'Never posted'
     var lastClass = p.last_posted_at ? 'posted-date' : ''
+    var imgCount = (p.image_urls && p.image_urls.length > 1) ? p.image_urls.length : 1
+    var imgBadge = imgCount > 1 ? '<div class="img-count-badge">&#128247; ' + imgCount + ' photos &middot; carousel</div>' : '<div class="img-count-badge single">&#128247; 1 photo</div>'
     var imgHtml = p.image_url
-      ? '<img class="prod-img" src="' + escHtml(p.image_url) + '" loading="lazy" onerror="prodImgErr(this)">'
+      ? '<div class="prod-img-wrap"><img class="prod-img" src="' + escHtml(p.image_url) + '" loading="lazy" onerror="prodImgErr(this)">' + imgBadge + '</div>'
       : '<div class="prod-img-placeholder">\u{1F56F}\uFE0F</div>'
     var PROD_REPLY_VARIANTS = ['Get yours at','Shop this mold at','Find it at','Order yours at','See more at']
     var dayIdx = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000) % PROD_REPLY_VARIANTS.length
