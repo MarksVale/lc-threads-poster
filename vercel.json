@@ -7,10 +7,17 @@
     {
       "path": "/api/cron/post-threads?slot=evening",
       "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/post-products",
+      "schedule": "0 10 * * *"
     }
   ],
   "functions": {
     "api/cron/post-threads.js": {
+      "maxDuration": 300
+    },
+    "api/cron/post-products.js": {
       "maxDuration": 300
     }
   }
