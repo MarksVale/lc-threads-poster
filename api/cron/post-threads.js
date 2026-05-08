@@ -25,6 +25,26 @@ function getReplyText(post) {
   return REPLY_VARIANTS[dayOfYear % REPLY_VARIANTS.length]
 }
 
+// ── Schedule logic ────────────────────────────────────────────────────────────
+// To keep it to 2 posts/day we alternate:
+//   Even days (day-of-year % 2 === 0) → morning + product
+//   Odd  days (day-of-year % 2 === 1) → product + evening
+//
+// The product cron always runs. Morning/evening crons skip if it's not their day.
+
+function dayOfYear() {
+  const now = new Date(Date.now() + 3 * 60 * 60 * 1000) // Riga time (UTC+3 approx)
+  const start = new Date(now.getFullYear(), 0, 0)
+  return Math.floor((now - start) / 86400000)
+}
+
+function isMyDay(slot) {
+  const d = dayOfYear()
+  if (slot === 'morning') return d % 2 === 0  // even days
+  if (slot === 'evening') return d % 2 === 1  // odd days
+  return true
+}
+
 // ── Threads API helpers ───────────────────────────────────────────────────────
 
 async function createContainer(content, imageUrl, replyToId) {
@@ -88,13 +108,21 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
+  const slot = (req.query && req.query.slot) || 'morning'
+
+  // Skip if today is not this slot's day
+  if (!isMyDay(slot)) {
+    console.log('Skipping ' + slot + ' — not its day (day ' + dayOfYear() + ')')
+    return res.status(200).json({ skipped: true, reason: 'Not this slot\'s day', slot })
+  }
+
+  // Small random delay (0–4 min) so posts don't land exactly on the hour
   const delaySec = Math.floor(Math.random() * 240)
   console.log('Random delay: ' + delaySec + 's')
   await sleep(delaySec * 1000)
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
   const today = todayRiga()
-  const slot = (req.query && req.query.slot) || 'morning'
 
   const { data: post, error: fetchError } = await supabase
     .from('threads_posts')
