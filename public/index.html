@@ -742,6 +742,8 @@ function saveNewPost() {
 
 // ── Products view ─────────────────────────────────────────────────────────────
 
+function prodImgErr(img) { img.style.display='none'; if(img.nextElementSibling) img.nextElementSibling.style.display='flex'; }
+
 var PROD_API = '/api/products'
 var allProducts = []
 var showingProducts = false
@@ -785,7 +787,7 @@ function renderProducts() {
     var lastPosted = p.last_posted_at ? 'Last posted: ' + fmtDate(p.last_posted_at) : 'Never posted'
     var lastClass = p.last_posted_at ? 'posted-date' : ''
     var imgHtml = p.image_url
-      ? '<img class="prod-img" src="' + escHtml(p.image_url) + '" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">'
+      ? '<img class="prod-img" src="' + escHtml(p.image_url) + '" loading="lazy" onerror="prodImgErr(this)">'
         + '<div class="prod-img-placeholder" style="display:none">🕯️</div>'
       : '<div class="prod-img-placeholder">🕯️</div>'
     html += '<div class="prod-card' + (p.active ? '' : ' inactive') + '" data-id="' + p.id + '">'

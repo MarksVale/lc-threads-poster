@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL  = process.env.SUPABASE_URL
 const SUPABASE_KEY  = process.env.SUPABASE_ANON_KEY
-const JWT_SECRET    = process.env.JWT_SECRET || 'changeme'
+const CRON_SECRET   = process.env.CRON_SECRET
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -18,7 +18,7 @@ function checkAuth(req) {
   if (!auth.startsWith('Bearer ')) return false
   const token = auth.slice(7)
   // Simple check — same token as posts.js
-  return token === JWT_SECRET
+  return token === CRON_SECRET
 }
 
 export default async function handler(req, res) {
