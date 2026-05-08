@@ -6,460 +6,131 @@
 <title>Latvian Candles — Post Queue</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f0f0f0;
-    min-height: 100vh;
-    color: #1a1a1a;
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; min-height: 100vh; color: #1a1a1a; }
 
   /* LOGIN */
-  #login-screen {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background: #18181b;
-  }
-  .login-box {
-    background: #27272a;
-    border-radius: 16px;
-    padding: 40px;
-    width: 340px;
-    text-align: center;
-  }
+  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #18181b; }
+  .login-box { background: #27272a; border-radius: 16px; padding: 40px; width: 340px; text-align: center; }
   .login-box h1 { color: #fff; font-size: 22px; margin-bottom: 6px; }
   .login-box p { color: #a1a1aa; font-size: 14px; margin-bottom: 28px; }
-  .login-box input {
-    width: 100%;
-    background: #3f3f46;
-    border: 1px solid #52525b;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 15px;
-    padding: 12px 16px;
-    margin-bottom: 12px;
-    outline: none;
-  }
+  .login-box input { width: 100%; background: #3f3f46; border: 1px solid #52525b; border-radius: 10px; color: #fff; font-size: 15px; padding: 12px 16px; margin-bottom: 12px; outline: none; }
   .login-box input:focus { border-color: #6366f1; }
-  .login-box button {
-    width: 100%;
-    background: #6366f1;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    padding: 13px;
-    cursor: pointer;
-  }
+  .login-box button { width: 100%; background: #6366f1; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; padding: 13px; cursor: pointer; }
   .login-box button:hover { background: #4f46e5; }
   .login-error { color: #f87171; font-size: 13px; margin-top: 10px; display: none; }
 
   /* APP */
   #app { display: none; }
-
-  header {
-    background: #18181b;
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+  header { background: #18181b; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
   header h1 { color: #fff; font-size: 18px; font-weight: 700; }
   header span { color: #a1a1aa; font-size: 13px; }
   .header-right { display: flex; align-items: center; gap: 12px; }
-  .btn-add {
-    background: #6366f1;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
+  .btn-add { background: #6366f1; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
   .btn-add:hover { background: #4f46e5; }
 
-  .toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 24px 0;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+  /* TOOLBAR */
+  .toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px 0; flex-wrap: wrap; gap: 10px; }
   .filters { display: flex; gap: 8px; flex-wrap: wrap; }
-  .filter-btn {
-    background: #fff;
-    border: 1.5px solid #e4e4e7;
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    color: #52525b;
-  }
+  .filter-btn { background: #fff; border: 1.5px solid #e4e4e7; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 500; cursor: pointer; color: #52525b; }
   .filter-btn.active { background: #18181b; color: #fff; border-color: #18181b; }
-
-  .layout-toggle {
-    display: flex;
-    gap: 4px;
-    background: #fff;
-    border: 1.5px solid #e4e4e7;
-    border-radius: 10px;
-    padding: 3px;
-  }
-  .layout-btn {
-    background: none;
-    border: none;
-    border-radius: 7px;
-    padding: 5px 10px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #71717a;
-    line-height: 1;
-    transition: background 0.1s;
-  }
+  .layout-toggle { display: flex; gap: 4px; background: #fff; border: 1.5px solid #e4e4e7; border-radius: 10px; padding: 3px; }
+  .layout-btn { background: none; border: none; border-radius: 7px; padding: 5px 10px; cursor: pointer; font-size: 14px; color: #71717a; line-height: 1; }
   .layout-btn.active { background: #18181b; color: #fff; }
 
-  /* GRID LAYOUT */
-  .posts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 20px;
-    padding: 20px 24px 40px;
-  }
-
-  /* LIST LAYOUT */
-  .posts-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding: 16px 24px 40px;
-  }
-  .list-item {
-    background: #fff;
-    border: 1px solid #e4e4e7;
-    border-bottom: none;
-    display: grid;
-    grid-template-columns: 160px 110px auto 1fr auto;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    transition: background 0.1s;
-  }
-  .list-item:first-child { border-radius: 12px 12px 0 0; }
-  .list-item:last-child { border-radius: 0 0 12px 12px; border-bottom: 1px solid #e4e4e7; }
-  .list-item:only-child { border-radius: 12px; border-bottom: 1px solid #e4e4e7; }
-  .list-item:hover { background: #fafafa; }
-  .list-date { font-size: 13px; font-weight: 600; color: #18181b; white-space: nowrap; }
-  .list-date-sub { font-size: 11px; color: #a1a1aa; }
-  .list-badges { display: flex; flex-direction: column; gap: 4px; }
-  .list-preview { font-size: 13px; color: #3f3f46; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .list-reply { font-size: 11px; color: #a1a1aa; white-space: nowrap; }
-  .list-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-  .list-action-btn {
-    background: none;
-    border: 1.5px solid #e4e4e7;
-    border-radius: 7px;
-    padding: 5px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    color: #52525b;
-    white-space: nowrap;
-  }
-  .list-action-btn:hover { background: #f4f4f5; }
-  .list-action-btn.danger { color: #ef4444; border-color: #fecaca; }
-  .list-action-btn.danger:hover { background: #fef2f2; }
-  .list-edit-row {
-    grid-column: 1 / -1;
-    padding-top: 8px;
-    display: none;
-  }
-  .list-edit-row textarea {
-    width: 100%;
-    border: 1.5px solid #6366f1;
-    border-radius: 8px;
-    font-size: 13px;
-    padding: 8px 10px;
-    font-family: inherit;
-    resize: vertical;
-    min-height: 80px;
-    outline: none;
-  }
-  .list-edit-actions { display: flex; gap: 6px; margin-top: 6px; }
-  .list-item.editing { flex-wrap: wrap; }
-
-  /* PHONE CARD */
-  .post-card {
-    background: #fff;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    transition: box-shadow 0.15s;
-  }
-  .post-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid #f4f4f5;
-  }
-  .card-date { font-size: 13px; font-weight: 600; color: #18181b; }
-  .card-day { font-size: 12px; color: #a1a1aa; }
-  .badge {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+  /* BADGES */
+  .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
   .badge-pending  { background: #fef3c7; color: #92400e; }
   .badge-approved { background: #dbeafe; color: #1e40af; }
   .badge-posted   { background: #d1fae5; color: #065f46; }
+  .badge-failed   { background: #fee2e2; color: #991b1b; }
+  .badge-slot { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: #f0f9ff; color: #0369a1; }
+  .badge-slot.evening { background: #faf5ff; color: #7c3aed; }
 
-  /* Threads-style preview */
-  .threads-preview {
-    padding: 16px;
-    background: #fff;
-  }
-  .threads-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
+  /* GRID */
+  .posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; padding: 20px 24px 40px; }
+
+  /* GRID CARD */
+  .post-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: box-shadow 0.15s; }
+  .post-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f4f4f5; }
+  .card-date { font-size: 13px; font-weight: 600; color: #18181b; }
+  .threads-preview { padding: 16px; background: #fff; }
+  .threads-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
   .handle { font-size: 13px; font-weight: 700; color: #18181b; }
-  .threads-body {
-    font-size: 14px;
-    line-height: 1.55;
-    color: #18181b;
-    white-space: pre-wrap;
-    word-break: break-word;
-    padding-left: 46px;
-  }
-  .char-count {
-    padding: 6px 16px 4px 62px;
-    font-size: 11px;
-    color: #a1a1aa;
-  }
+  .threads-body { font-size: 14px; line-height: 1.55; color: #18181b; white-space: pre-wrap; word-break: break-word; padding-left: 46px; }
+  .char-count { padding: 6px 16px 4px 62px; font-size: 11px; color: #a1a1aa; }
   .char-count.over { color: #ef4444; }
 
-  /* Auto-reply thread preview */
-  .reply-thread {
-    padding: 0 16px 14px 16px;
-    display: flex;
-    gap: 10px;
-  }
-  .reply-line-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-shrink: 0;
-    width: 36px;
-  }
-  .reply-vline {
-    width: 2px;
-    flex: 1;
-    min-height: 12px;
-    background: #e4e4e7;
-    border-radius: 1px;
-  }
-  .reply-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    flex-shrink: 0;
-  }
+  /* REPLY THREAD */
+  .reply-thread { padding: 0 16px 14px 16px; display: flex; gap: 10px; }
+  .reply-line-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 36px; }
+  .reply-vline { width: 2px; flex: 1; min-height: 12px; background: #e4e4e7; border-radius: 1px; }
+  .reply-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
   .reply-content { flex: 1; }
   .reply-handle { font-size: 12px; font-weight: 700; color: #71717a; margin-bottom: 2px; }
   .reply-text { font-size: 12px; color: #71717a; line-height: 1.4; }
   .reply-text a { color: #6366f1; text-decoration: none; }
 
-  /* Slot badge */
-  .badge-slot {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 20px;
-    background: #f0f9ff;
-    color: #0369a1;
-  }
-  .badge-slot.evening { background: #faf5ff; color: #7c3aed; }
-
-  /* Edit area */
-  .edit-area {
-    display: none;
-    padding: 12px 16px;
-    border-top: 1px solid #f4f4f5;
-  }
-  .edit-area textarea {
-    width: 100%;
-    border: 1.5px solid #e4e4e7;
-    border-radius: 10px;
-    font-size: 14px;
-    line-height: 1.55;
-    padding: 10px 12px;
-    resize: vertical;
-    min-height: 120px;
-    font-family: inherit;
-    color: #18181b;
-    outline: none;
-  }
+  /* EDIT AREA */
+  .edit-area { display: none; padding: 12px 16px; border-top: 1px solid #f4f4f5; }
+  .edit-area textarea { width: 100%; border: 1.5px solid #e4e4e7; border-radius: 10px; font-size: 14px; line-height: 1.55; padding: 10px 12px; resize: vertical; min-height: 120px; font-family: inherit; color: #18181b; outline: none; }
   .edit-area textarea:focus { border-color: #6366f1; }
   .edit-actions { display: flex; gap: 8px; margin-top: 8px; }
-  .btn-save {
-    background: #18181b;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    flex: 1;
-  }
+  .btn-save { background: #18181b; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; }
   .btn-save:hover { background: #3f3f46; }
-  .btn-cancel {
-    background: #f4f4f5;
-    color: #52525b;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
+  .btn-cancel { background: #f4f4f5; color: #52525b; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
-  .card-actions {
-    display: flex;
-    gap: 0;
-    border-top: 1px solid #f4f4f5;
-  }
-  .action-btn {
-    flex: 1;
-    background: none;
-    border: none;
-    padding: 11px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #71717a;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    transition: background 0.1s;
-  }
+  /* CARD ACTIONS */
+  .card-actions { display: flex; gap: 0; border-top: 1px solid #f4f4f5; }
+  .action-btn { flex: 1; background: none; border: none; padding: 11px; font-size: 12px; font-weight: 500; color: #71717a; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: background 0.1s; }
   .action-btn:hover { background: #f9f9f9; }
   .action-btn + .action-btn { border-left: 1px solid #f4f4f5; }
+  .action-btn.approve { color: #1e40af; font-weight: 700; }
+  .action-btn.approve:hover { background: #dbeafe; }
   .action-btn.danger { color: #ef4444; }
   .action-btn.danger:hover { background: #fef2f2; }
 
-  /* New post modal */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-  }
+  /* LIST */
+  .posts-list { display: flex; flex-direction: column; padding: 16px 24px 40px; }
+  .list-item { background: #fff; border: 1px solid #e4e4e7; border-bottom: none; display: grid; grid-template-columns: 140px 100px 1fr 120px auto; align-items: center; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
+  .list-item:first-child { border-radius: 12px 12px 0 0; }
+  .list-item:last-child { border-radius: 0 0 12px 12px; border-bottom: 1px solid #e4e4e7; }
+  .list-item:only-child { border-radius: 12px; border-bottom: 1px solid #e4e4e7; }
+  .list-item:hover { background: #fafafa; }
+  .list-date { font-size: 13px; font-weight: 600; color: #18181b; }
+  .list-preview { font-size: 13px; color: #3f3f46; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .list-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+  .list-action-btn { background: none; border: 1.5px solid #e4e4e7; border-radius: 7px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: #52525b; white-space: nowrap; }
+  .list-action-btn:hover { background: #f4f4f5; }
+  .list-action-btn.approve-btn { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; font-weight: 600; }
+  .list-action-btn.danger { color: #ef4444; border-color: #fecaca; }
+  .list-action-btn.danger:hover { background: #fef2f2; }
+  .list-edit-row { grid-column: 1 / -1; display: none; padding-top: 10px; border-top: 1px solid #f4f4f5; margin-top: 4px; }
+  .list-edit-row textarea { width: 100%; border: 1.5px solid #6366f1; border-radius: 8px; font-size: 13px; padding: 8px 10px; font-family: inherit; resize: vertical; min-height: 80px; outline: none; }
+  .list-edit-row .edit-actions { margin-top: 6px; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
   .modal-overlay.open { display: flex; }
-  .modal {
-    background: #fff;
-    border-radius: 16px;
-    width: 480px;
-    max-width: 95vw;
-    padding: 28px;
-  }
+  .modal { background: #fff; border-radius: 16px; width: 480px; max-width: 95vw; padding: 28px; }
   .modal h2 { font-size: 18px; margin-bottom: 20px; }
   .modal label { font-size: 13px; font-weight: 600; color: #52525b; display: block; margin-bottom: 5px; }
-  .modal input, .modal textarea, .modal select {
-    width: 100%;
-    border: 1.5px solid #e4e4e7;
-    border-radius: 10px;
-    font-size: 14px;
-    padding: 10px 12px;
-    font-family: inherit;
-    color: #18181b;
-    outline: none;
-    margin-bottom: 16px;
-  }
+  .modal input, .modal textarea, .modal select { width: 100%; border: 1.5px solid #e4e4e7; border-radius: 10px; font-size: 14px; padding: 10px 12px; font-family: inherit; color: #18181b; outline: none; margin-bottom: 16px; }
   .modal input:focus, .modal textarea:focus { border-color: #6366f1; }
   .modal textarea { min-height: 120px; resize: vertical; }
   .modal-actions { display: flex; gap: 10px; }
-  .btn-primary {
-    flex: 1;
-    background: #18181b;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .btn-secondary {
-    background: #f4f4f5;
-    color: #52525b;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
+  .btn-primary { flex: 1; background: #18181b; color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-secondary { background: #f4f4f5; color: #52525b; border: none; border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
 
   .empty { text-align: center; padding: 60px 20px; color: #a1a1aa; }
   .loading { text-align: center; padding: 60px 20px; color: #a1a1aa; }
-
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: #18181b;
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    opacity: 0;
-    transition: opacity 0.2s;
-    z-index: 999;
-    pointer-events: none;
-  }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #18181b; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.2s; z-index: 999; pointer-events: none; }
   .toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
     <h1>🕯️ Latvian Candles</h1>
@@ -470,12 +141,9 @@
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
   <header>
-    <div>
-      <h1>🕯️ Post Queue</h1>
-    </div>
+    <div><h1>🕯️ Post Queue</h1></div>
     <div class="header-right">
       <span id="post-count"></span>
       <button class="btn-add" onclick="openNewModal()">+ New post</button>
@@ -484,35 +152,32 @@
 
   <div class="toolbar">
     <div class="filters">
-      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
-      <button class="filter-btn" onclick="setFilter('pending', this)">Pending</button>
-      <button class="filter-btn" onclick="setFilter('approved', this)">Approved</button>
-      <button class="filter-btn" onclick="setFilter('posted', this)">Posted</button>
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
+      <button class="filter-btn" onclick="setFilter('approved',this)">Approved</button>
+      <button class="filter-btn" onclick="setFilter('posted',this)">Posted</button>
     </div>
     <div class="layout-toggle">
-      <button class="layout-btn active" id="btn-grid" onclick="setLayout('grid')" title="Grid view">⊞</button>
-      <button class="layout-btn" id="btn-list" onclick="setLayout('list')" title="List view">☰</button>
+      <button class="layout-btn" id="btn-grid" onclick="setLayout('grid')" title="Grid">⊞</button>
+      <button class="layout-btn" id="btn-list" onclick="setLayout('list')" title="List">☰</button>
     </div>
   </div>
 
-  <div id="posts-grid">
-    <div class="loading">Loading posts...</div>
-  </div>
+  <div id="posts-grid"><div class="loading">Loading posts...</div></div>
 </div>
 
-<!-- NEW POST MODAL -->
 <div class="modal-overlay" id="new-modal">
   <div class="modal">
     <h2>New post</h2>
     <label>Date</label>
     <input type="date" id="new-date" />
-    <label>Content</label>
-    <textarea id="new-content" placeholder="Write your post..."></textarea>
     <label>Slot</label>
     <select id="new-slot">
       <option value="morning">🌅 Morning (10:00 Riga)</option>
       <option value="evening">🌙 Evening (20:00 Riga)</option>
     </select>
+    <label>Content</label>
+    <textarea id="new-content" placeholder="Write your post..."></textarea>
     <label>Image URL (optional)</label>
     <input type="url" id="new-image" placeholder="https://..." />
     <div class="modal-actions">
@@ -534,14 +199,14 @@ let currentLayout = localStorage.getItem('lc_layout') || 'grid'
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
-function formatDate(dateStr) {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  return {
-    short: `${d} ${MONTHS[m-1]}`,
-    day: DAYS[date.getDay()],
-    full: `${DAYS[date.getDay()]}, ${d} ${MONTHS[m-1]} ${y}`
-  }
+function formatDate(s) {
+  const [y,m,d] = s.split('-').map(Number)
+  const dt = new Date(y, m-1, d)
+  return { short: `${d} ${MONTHS[m-1]}`, day: DAYS[dt.getDay()], full: `${DAYS[dt.getDay()]}, ${d} ${MONTHS[m-1]} ${y}` }
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').split('\n').join('<br>')
 }
 
 async function login() {
@@ -561,11 +226,8 @@ async function login() {
   render()
 }
 
-document.getElementById('secret-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') login()
-})
+document.getElementById('secret-input').addEventListener('keydown', e => { if (e.key === 'Enter') login() })
 
-// Auto-login from session
 const saved = sessionStorage.getItem('lc_secret')
 if (saved) {
   SECRET = saved
@@ -598,47 +260,81 @@ function render() {
   const posts = currentFilter === 'all' ? allPosts : allPosts.filter(p => p.status === currentFilter)
   const pending = allPosts.filter(p => p.status === 'pending').length
   document.getElementById('post-count').textContent = `${pending} pending`
-
   document.getElementById('btn-grid').classList.toggle('active', currentLayout === 'grid')
   document.getElementById('btn-list').classList.toggle('active', currentLayout === 'list')
 
   const grid = document.getElementById('posts-grid')
-  if (!posts.length) {
-    grid.className = ''
-    grid.innerHTML = '<div class="empty">No posts here.</div>'
-    return
-  }
+  if (!posts.length) { grid.className = ''; grid.innerHTML = '<div class="empty">No posts here.</div>'; return }
 
   if (currentLayout === 'list') {
     grid.className = 'posts-list'
     grid.innerHTML = posts.map(post => {
       const d = formatDate(post.scheduled_date)
-      const isPending = post.status === 'pending'
-      const slotLabel = (post.slot || 'morning') === 'morning' ? '🌅' : '🌙'
-      const slotClass = (post.slot || 'morning') === 'evening' ? 'evening' : ''
-      return `
-      <div class="list-item" id="card-${post.id}">
+      const ip = post.status === 'pending'
+      const ia = post.status === 'approved'
+      const slot = post.slot || 'morning'
+      const slotIcon = slot === 'morning' ? '🌅' : '🌙'
+      const slotClass = slot === 'evening' ? 'evening' : ''
+      return `<div class="list-item" id="card-${post.id}">
         <div>
           <div class="list-date">${d.short} <span style="color:#a1a1aa;font-weight:400">${d.day.slice(0,3)}</span></div>
-          <div style="display:flex;gap:4px;margin-top:4px">
-            <span class="badge-slot ${slotClass}" style="font-size:10px">${slotLabel} ${post.slot||'morning'}</span>
-          </div>
+          <span class="badge-slot ${slotClass}" style="margin-top:4px;display:inline-block">${slotIcon} ${slot}</span>
         </div>
-        <span class="badge badge-${post.status}" style="font-size:11px;align-self:center">${post.status}</span>
+        <span class="badge badge-${post.status}">${post.status}</span>
         <div class="list-preview" id="body-${post.id}">${escHtml(post.content)}</div>
-        <div style="font-size:11px;color:#a1a1aa;align-self:center;white-space:nowrap">↩ store link</div>
+        <div style="font-size:11px;color:#a1a1aa;white-space:nowrap">↩ latviancandles.store</div>
         <div class="list-actions">
-          ${isPending ? `<button class="list-action-btn" style="background:#dbeafe;color:#1e40af;border-color:#bfdbfe;font-weight:600" onclick="approvePost(${post.id})">✓ Approve</button>` : ''}
-          ${isPending ? `<button class="list-action-btn" onclick="toggleListEdit(${post.id})">✏️</button>` : ''}
-          ${isPending ? `<button class="list-action-btn danger" onclick="deletePost(${post.id})">🗑</button>` : ''}
-          ${!isPending && post.status !== 'posted' ? `<button class="list-action-btn" onclick="copyText(${post.id})">📋</button>` : ''}
+          ${ip ? `<button class="list-action-btn approve-btn" onclick="approvePost(${post.id})">✓ Approve</button>` : ''}
+          ${ip ? `<button class="list-action-btn" onclick="toggleListEdit(${post.id})">✏️</button>` : ''}
+          ${ia ? `<button class="list-action-btn danger" onclick="unapprovePost(${post.id})">↩ Undo</button>` : ''}
+          ${ip ? `<button class="list-action-btn danger" onclick="deletePost(${post.id})">🗑</button>` : ''}
           ${post.status === 'posted' ? `<button class="list-action-btn" onclick="copyText(${post.id})">📋</button>` : ''}
         </div>
-        ${isPending ? `
-        <div id="edit-${post.id}" style="grid-column:1/-1;display:none;padding-top:8px;border-top:1px solid #f4f4f5;margin-top:4px">
-          <textarea id="ta-${post.id}" style="width:100%;border:1.5px solid #6366f1;border-radius:8px;font-size:13px;padding:8px 10px;font-family:inherit;resize:vertical;min-height:80px;outline:none" oninput="updateChars(${post.id})">${escHtml(post.content)}</textarea>
-          <div style="display:flex;gap:6px;margin-top:6px">
-            <button class="btn-save" style="flex:1" onclick="saveEdit(${post.id})">Save</button>
+        <div class="list-edit-row" id="edit-${post.id}">
+          <textarea id="ta-${post.id}">${escHtml(post.content)}</textarea>
+          <div class="edit-actions">
+            <button class="btn-save" onclick="saveEdit(${post.id})">Save</button>
             <button class="btn-cancel" onclick="cancelEdit(${post.id})">Cancel</button>
           </div>
-        </div>` : ''}
+        </div>
+      </div>`
+    }).join('')
+    return
+  }
+
+  grid.className = 'posts-grid'
+  grid.innerHTML = posts.map(post => {
+    const d = formatDate(post.scheduled_date)
+    const chars = post.content.length
+    const over = chars > 500
+    const ip = post.status === 'pending'
+    const ia = post.status === 'approved'
+    const slot = post.slot || 'morning'
+    const slotLabel = slot === 'morning' ? '🌅 Morning' : '🌙 Evening'
+    const slotClass = slot === 'evening' ? 'evening' : ''
+    return `<div class="post-card" id="card-${post.id}">
+      <div class="card-header">
+        <div class="card-date">${d.full}</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge-slot ${slotClass}">${slotLabel}</span>
+          <span class="badge badge-${post.status}">${post.status}</span>
+        </div>
+      </div>
+      <div class="threads-preview">
+        <div class="threads-meta">
+          <div class="avatar">🕯️</div>
+          <span class="handle">latviancandles_store</span>
+        </div>
+        <div class="threads-body" id="body-${post.id}">${escHtml(post.content)}</div>
+      </div>
+      <div class="char-count ${over ? 'over' : ''}" id="chars-${post.id}">${chars}/500 characters</div>
+      <div class="reply-thread">
+        <div class="reply-line-col"><div class="reply-vline"></div><div class="reply-avatar">🕯️</div></div>
+        <div class="reply-content">
+          <div class="reply-handle">latviancandles_store</div>
+          <div class="reply-text">Our full collection is at <a href="https://latviancandles.store" target="_blank">latviancandles.store</a></div>
+        </div>
+      </div>
+      ${ip ? `<div class="edit-area" id="edit-${post.id}">
+        <textarea id="ta-${post.id}" oninput="updateChars(${post.id})">${escHtml(post.content)}</textarea>
+        <div class="edi
