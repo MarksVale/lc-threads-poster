@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/post-threads",
+      "schedule": "0 8 * * *"
+    }
+  ],
+  "functions": {
+    "api/cron/post-threads.js": {
+      "maxDuration": 60
+    }
+  }
+}
