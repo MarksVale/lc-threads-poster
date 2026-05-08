@@ -31,7 +31,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const { data, error } = await supabase
       .from('products')
-      .select('id, handle, title, description, image_url, price, sort_order, active, last_posted_at')
+      .select('id, handle, title, description, image_url, image_urls, price, sort_order, active, last_posted_at')
       .order('sort_order', { ascending: true })
     if (error) return res.status(500).json({ error: error.message })
     return res.json(data)
@@ -69,13 +69,7 @@ export default async function handler(req, res) {
     const THREADS_USER_ID = process.env.THREADS_USER_ID
     const THREADS_TOKEN   = process.env.THREADS_ACCESS_TOKEN
 
-    async function createContainer(content, imageUrl, replyToId) {
-      const params = new URLSearchParams({ access_token: THREADS_TOKEN, text: content, media_type: imageUrl ? 'IMAGE' : 'TEXT' })
-      if (imageUrl) params.append('image_url', imageUrl)
-      if (replyToId) params.append('reply_to_id', replyToId)
-      const r = await fetch('https://graph.threads.net/v1.0/' + THREADS_USER_ID + '/threads', { method: 'POST', body: params })
-      return r.json()
-    }
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 
     async function pollStatus(cid) {
       const deadline = Date.now() + 45000
@@ -84,7 +78,7 @@ export default async function handler(req, res) {
         const d = await r.json()
         if (d.status === 'FINISHED') return
         if (d.status === 'ERROR') throw new Error(d.error_message)
-        await new Promise(r => setTimeout(r, 3000))
+        await sleep(3000)
       }
       throw new Error('Timed out')
     }
@@ -95,24 +89,62 @@ export default async function handler(req, res) {
       return r.json()
     }
 
+    async function createSinglePost(text, imageUrl) {
+      const params = new URLSearchParams({ access_token: THREADS_TOKEN, text, media_type: 'IMAGE', image_url: imageUrl })
+      const r = await fetch('https://graph.threads.net/v1.0/' + THREADS_USER_ID + '/threads', { method: 'POST', body: params })
+      return r.json()
+    }
+
+    async function createCarouselPost(text, imageUrls) {
+      const urls = imageUrls.slice(0, 10)
+      const itemIds = []
+      for (const url of urls) {
+        const params = new URLSearchParams({ access_token: THREADS_TOKEN, media_type: 'IMAGE', image_url: url, is_carousel_item: 'true' })
+        const r = await fetch('https://graph.threads.net/v1.0/' + THREADS_USER_ID + '/threads', { method: 'POST', body: params })
+        const d = await r.json()
+        if (!d.id) throw new Error('Carousel item failed: ' + JSON.stringify(d))
+        itemIds.push(d.id)
+      }
+      for (const id of itemIds) await pollStatus(id)
+      const params = new URLSearchParams({ access_token: THREADS_TOKEN, media_type: 'CAROUSEL', children: itemIds.join(','), text })
+      const r = await fetch('https://graph.threads.net/v1.0/' + THREADS_USER_ID + '/threads', { method: 'POST', body: params })
+      return r.json()
+    }
+
+    async function createReply(text, replyToId) {
+      const params = new URLSearchParams({ access_token: THREADS_TOKEN, text, media_type: 'TEXT', reply_to_id: replyToId })
+      const r = await fetch('https://graph.threads.net/v1.0/' + THREADS_USER_ID + '/threads', { method: 'POST', body: params })
+      return r.json()
+    }
+
     try {
-      const container = await createContainer(product.description, product.image_url, null)
+      const images = product.image_urls && product.image_urls.length > 1 ? product.image_urls : null
+
+      let container
+      if (images) {
+        container = await createCarouselPost(product.description, images)
+      } else {
+        container = await createSinglePost(product.description, product.image_url)
+      }
       if (!container.id) throw new Error('Container failed: ' + JSON.stringify(container))
+
       await pollStatus(container.id)
       const published = await publish(container.id)
       if (!published.id) throw new Error('Publish failed: ' + JSON.stringify(published))
 
-      await new Promise(r => setTimeout(r, 2000))
+      await sleep(2000)
+
       const PRODUCT_REPLY_VARIANTS = [
-      'Get yours at latviancandles.store/products/',
-      'Shop this mold at latviancandles.store/products/',
-      'Find it at latviancandles.store/products/',
-      'Order yours at latviancandles.store/products/',
-      'See more at latviancandles.store/products/',
-    ]
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)
-    const replyText = PRODUCT_REPLY_VARIANTS[dayOfYear % PRODUCT_REPLY_VARIANTS.length] + product.handle
-      const replyContainer = await createContainer(replyText, null, published.id)
+        'Get yours at latviancandles.store/products/',
+        'Shop this mold at latviancandles.store/products/',
+        'Find it at latviancandles.store/products/',
+        'Order yours at latviancandles.store/products/',
+        'See more at latviancandles.store/products/',
+      ]
+      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)
+      const replyText = PRODUCT_REPLY_VARIANTS[dayOfYear % PRODUCT_REPLY_VARIANTS.length] + product.handle
+
+      const replyContainer = await createReply(replyText, published.id)
       if (replyContainer.id) {
         await pollStatus(replyContainer.id)
         await publish(replyContainer.id)
@@ -120,7 +152,7 @@ export default async function handler(req, res) {
 
       await supabase.from('products').update({ last_posted_at: new Date().toISOString() }).eq('id', id)
 
-      return res.json({ ok: true, threads_id: published.id, product: product.handle })
+      return res.json({ ok: true, threads_id: published.id, product: product.handle, carousel: !!images })
     } catch(err) {
       return res.status(500).json({ error: err.message })
     }
