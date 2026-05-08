@@ -8,13 +8,14 @@ const CRON_SECRET        = process.env.CRON_SECRET
 
 // ── Threads API helpers ──────────────────────────────────────────────────────
 
-async function createContainer(content, imageUrl) {
+async function createContainer(content, imageUrl, replyToId = null) {
   const params = new URLSearchParams({
     access_token: THREADS_TOKEN,
     text: content,
     media_type: imageUrl ? 'IMAGE' : 'TEXT',
   })
   if (imageUrl) params.append('image_url', imageUrl)
+  if (replyToId) params.append('reply_to_id', replyToId)
 
   const res = await fetch(
     `https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads`,
@@ -109,7 +110,24 @@ export default async function handler(req, res) {
     }
     console.log('Published! Threads post ID:', published.id)
 
-    // Step 4: Mark as posted in Supabase
+    // Step 4: Post a reply with the store link
+    try {
+      const replyContainer = await createContainer(
+        'Our full collection is at latviancandles.store',
+        null,
+        published.id
+      )
+      if (replyContainer.id) {
+        await pollContainerStatus(replyContainer.id)
+        await publishContainer(replyContainer.id)
+        console.log('Reply posted with store link')
+      }
+    } catch (replyErr) {
+      // Reply failing should not fail the whole job
+      console.error('Reply post failed (non-fatal):', replyErr.message)
+    }
+
+    // Step 5: Mark as posted in Supabase
     await supabase
       .from('threads_posts')
       .update({
@@ -135,4 +153,4 @@ export default async function handler(req, res) {
 
     return res.status(500).json({ error: err.message })
   }
-    }
+}
