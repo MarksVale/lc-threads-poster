@@ -135,9 +135,10 @@
   <div class="login-box">
     <h1>🕯️ Latvian Candles</h1>
     <p>Post Queue Manager</p>
-    <input type="password" id="secret-input" placeholder="Enter your secret key" />
+    <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
+    <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
     <button onclick="login()">Sign in</button>
-    <div class="login-error" id="login-error">Wrong key, try again.</div>
+    <div class="login-error" id="login-error">Wrong email or password.</div>
   </div>
 </div>
 
@@ -210,36 +211,40 @@ function escHtml(s) {
 }
 
 async function login() {
-  const val = document.getElementById('secret-input').value.trim()
-  if (!val) return
-  SECRET = val
-  const res = await fetch(API, { headers: { Authorization: `Bearer ${SECRET}` } })
-  if (res.status === 401) {
-    document.getElementById('login-error').style.display = 'block'
-    SECRET = ''
+  const email = document.getElementById('login-email').value.trim()
+  const password = document.getElementById('login-password').value
+  if (!email || !password) return
+  const errEl = document.getElementById('login-error')
+  errEl.style.display = 'none'
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  })
+  if (!res.ok) {
+    errEl.style.display = 'block'
     return
   }
+  const { token } = await res.json()
+  SECRET = token
   sessionStorage.setItem('lc_secret', SECRET)
+  await loadPosts()
+}
+
+async function loadPosts() {
+  const res = await fetch(API, { headers: { Authorization: `Bearer ${SECRET}` } })
+  if (!res.ok) { sessionStorage.removeItem('lc_secret'); return }
   allPosts = await res.json()
   document.getElementById('login-screen').style.display = 'none'
   document.getElementById('app').style.display = 'block'
   render()
 }
 
-document.getElementById('secret-input').addEventListener('keydown', e => { if (e.key === 'Enter') login() })
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') login() })
+document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-password').focus() })
 
 const saved = sessionStorage.getItem('lc_secret')
-if (saved) {
-  SECRET = saved
-  fetch(API, { headers: { Authorization: `Bearer ${SECRET}` } }).then(async r => {
-    if (r.ok) {
-      allPosts = await r.json()
-      document.getElementById('login-screen').style.display = 'none'
-      document.getElementById('app').style.display = 'block'
-      render()
-    } else { sessionStorage.removeItem('lc_secret') }
-  })
-}
+if (saved) { SECRET = saved; loadPosts() }
 
 function setFilter(f, el) {
   currentFilter = f
@@ -331,10 +336,4 @@ function render() {
       <div class="reply-thread">
         <div class="reply-line-col"><div class="reply-vline"></div><div class="reply-avatar">🕯️</div></div>
         <div class="reply-content">
-          <div class="reply-handle">latviancandles_store</div>
-          <div class="reply-text">Our full collection is at <a href="https://latviancandles.store" target="_blank">latviancandles.store</a></div>
-        </div>
-      </div>
-      ${ip ? `<div class="edit-area" id="edit-${post.id}">
-        <textarea id="ta-${post.id}" oninput="updateChars(${post.id})">${escHtml(post.content)}</textarea>
-        <div class="edi
+          <div class="reply-handle">latviancandles_s
