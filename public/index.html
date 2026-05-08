@@ -14,6 +14,7 @@
     color: #1a1a1a;
   }
 
+  /* LOGIN */
   #login-screen {
     display: flex;
     align-items: center;
@@ -56,6 +57,7 @@
   .login-box button:hover { background: #4f46e5; }
   .login-error { color: #f87171; font-size: 13px; margin-top: 10px; display: none; }
 
+  /* APP */
   #app { display: none; }
 
   header {
@@ -108,6 +110,7 @@
     padding: 20px 24px 40px;
   }
 
+  /* PHONE CARD */
   .post-card {
     background: #fff;
     border-radius: 16px;
@@ -125,6 +128,7 @@
     border-bottom: 1px solid #f4f4f5;
   }
   .card-date { font-size: 13px; font-weight: 600; color: #18181b; }
+  .card-day { font-size: 12px; color: #a1a1aa; }
   .badge {
     font-size: 11px;
     font-weight: 600;
@@ -136,6 +140,7 @@
   .badge-pending { background: #fef3c7; color: #92400e; }
   .badge-posted  { background: #d1fae5; color: #065f46; }
 
+  /* Threads-style preview */
   .threads-preview {
     padding: 16px;
     background: #fff;
@@ -167,12 +172,60 @@
     padding-left: 46px;
   }
   .char-count {
-    padding: 6px 16px 10px 62px;
+    padding: 6px 16px 4px 62px;
     font-size: 11px;
     color: #a1a1aa;
   }
   .char-count.over { color: #ef4444; }
 
+  /* Auto-reply thread preview */
+  .reply-thread {
+    padding: 0 16px 14px 16px;
+    display: flex;
+    gap: 10px;
+  }
+  .reply-line-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 36px;
+  }
+  .reply-vline {
+    width: 2px;
+    flex: 1;
+    min-height: 12px;
+    background: #e4e4e7;
+    border-radius: 1px;
+  }
+  .reply-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .reply-content { flex: 1; }
+  .reply-handle { font-size: 12px; font-weight: 700; color: #71717a; margin-bottom: 2px; }
+  .reply-text { font-size: 12px; color: #71717a; line-height: 1.4; }
+  .reply-text a { color: #6366f1; text-decoration: none; }
+
+  /* Slot badge */
+  .badge-slot {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #f0f9ff;
+    color: #0369a1;
+  }
+  .badge-slot.evening { background: #faf5ff; color: #7c3aed; }
+
+  /* Edit area */
   .edit-area {
     display: none;
     padding: 12px 16px;
@@ -241,6 +294,7 @@
   .action-btn.danger { color: #ef4444; }
   .action-btn.danger:hover { background: #fef2f2; }
 
+  /* New post modal */
   .modal-overlay {
     display: none;
     position: fixed;
@@ -260,7 +314,7 @@
   }
   .modal h2 { font-size: 18px; margin-bottom: 20px; }
   .modal label { font-size: 13px; font-weight: 600; color: #52525b; display: block; margin-bottom: 5px; }
-  .modal input, .modal textarea {
+  .modal input, .modal textarea, .modal select {
     width: 100%;
     border: 1.5px solid #e4e4e7;
     border-radius: 10px;
@@ -319,9 +373,10 @@
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
-    <h1>Latvian Candles</h1>
+    <h1>🕯️ Latvian Candles</h1>
     <p>Post Queue Manager</p>
     <input type="password" id="secret-input" placeholder="Enter your secret key" />
     <button onclick="login()">Sign in</button>
@@ -329,22 +384,30 @@
   </div>
 </div>
 
+<!-- APP -->
 <div id="app">
   <header>
-    <div><h1>Post Queue</h1></div>
+    <div>
+      <h1>🕯️ Post Queue</h1>
+    </div>
     <div class="header-right">
       <span id="post-count"></span>
       <button class="btn-add" onclick="openNewModal()">+ New post</button>
     </div>
   </header>
+
   <div class="filters">
     <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
     <button class="filter-btn" onclick="setFilter('pending', this)">Pending</button>
     <button class="filter-btn" onclick="setFilter('posted', this)">Posted</button>
   </div>
-  <div class="posts-grid" id="posts-grid"><div class="loading">Loading posts...</div></div>
+
+  <div class="posts-grid" id="posts-grid">
+    <div class="loading">Loading posts...</div>
+  </div>
 </div>
 
+<!-- NEW POST MODAL -->
 <div class="modal-overlay" id="new-modal">
   <div class="modal">
     <h2>New post</h2>
@@ -352,6 +415,11 @@
     <input type="date" id="new-date" />
     <label>Content</label>
     <textarea id="new-content" placeholder="Write your post..."></textarea>
+    <label>Slot</label>
+    <select id="new-slot">
+      <option value="morning">🌅 Morning (10:00 Riga)</option>
+      <option value="evening">🌙 Evening (20:00 Riga)</option>
+    </select>
     <label>Image URL (optional)</label>
     <input type="url" id="new-image" placeholder="https://..." />
     <div class="modal-actions">
@@ -364,128 +432,255 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = '/api/posts';
-let SECRET = '';
-let allPosts = [];
-let currentFilter = 'all';
-const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const API = '/api/posts'
+let SECRET = ''
+let allPosts = []
+let currentFilter = 'all'
 
-function formatDate(s) {
-  const [y,m,d] = s.split('-').map(Number);
-  const dt = new Date(y, m-1, d);
-  return DAYS[dt.getDay()] + ', ' + d + ' ' + MONTHS[m-1] + ' ' + y;
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+function formatDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  return {
+    short: `${d} ${MONTHS[m-1]}`,
+    day: DAYS[date.getDay()],
+    full: `${DAYS[date.getDay()]}, ${d} ${MONTHS[m-1]} ${y}`
+  }
 }
 
 async function login() {
-  const val = document.getElementById('secret-input').value.trim();
-  if (!val) return;
-  SECRET = val;
-  const r = await fetch(API, {headers:{Authorization:'Bearer '+SECRET}});
-  if (r.status === 401) { document.getElementById('login-error').style.display='block'; SECRET=''; return; }
-  sessionStorage.setItem('lc_secret', SECRET);
-  allPosts = await r.json();
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  render();
+  const val = document.getElementById('secret-input').value.trim()
+  if (!val) return
+  SECRET = val
+  const res = await fetch(API, { headers: { Authorization: `Bearer ${SECRET}` } })
+  if (res.status === 401) {
+    document.getElementById('login-error').style.display = 'block'
+    SECRET = ''
+    return
+  }
+  sessionStorage.setItem('lc_secret', SECRET)
+  allPosts = await res.json()
+  document.getElementById('login-screen').style.display = 'none'
+  document.getElementById('app').style.display = 'block'
+  render()
 }
 
-document.getElementById('secret-input').addEventListener('keydown', e => { if (e.key==='Enter') login(); });
+document.getElementById('secret-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login()
+})
 
-const saved = sessionStorage.getItem('lc_secret');
+// Auto-login from session
+const saved = sessionStorage.getItem('lc_secret')
 if (saved) {
-  SECRET = saved;
-  fetch(API, {headers:{Authorization:'Bearer '+SECRET}}).then(async r => {
-    if (r.ok) { allPosts = await r.json(); document.getElementById('login-screen').style.display='none'; document.getElementById('app').style.display='block'; render(); }
-    else sessionStorage.removeItem('lc_secret');
-  });
+  SECRET = saved
+  fetch(API, { headers: { Authorization: `Bearer ${SECRET}` } }).then(async r => {
+    if (r.ok) {
+      allPosts = await r.json()
+      document.getElementById('login-screen').style.display = 'none'
+      document.getElementById('app').style.display = 'block'
+      render()
+    } else { sessionStorage.removeItem('lc_secret') }
+  })
 }
 
 function setFilter(f, el) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  render();
+  currentFilter = f
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+  el.classList.add('active')
+  render()
 }
 
 function render() {
-  const posts = currentFilter==='all' ? allPosts : allPosts.filter(p => p.status===currentFilter);
-  document.getElementById('post-count').textContent = allPosts.filter(p=>p.status==='pending').length + ' pending';
-  const grid = document.getElementById('posts-grid');
-  if (!posts.length) { grid.innerHTML = '<div class="empty">No posts here.</div>'; return; }
+  const posts = currentFilter === 'all' ? allPosts : allPosts.filter(p => p.status === currentFilter)
+  const pending = allPosts.filter(p => p.status === 'pending').length
+  document.getElementById('post-count').textContent = `${pending} pending`
+
+  const grid = document.getElementById('posts-grid')
+  if (!posts.length) {
+    grid.innerHTML = '<div class="empty">No posts here.</div>'
+    return
+  }
+
   grid.innerHTML = posts.map(post => {
-    const chars = post.content.length;
-    const over = chars > 500;
-    const ip = post.status === 'pending';
-    return '<div class="post-card" id="card-'+post.id+'">' +
-      '<div class="card-header"><div class="card-date">'+formatDate(post.scheduled_date)+'</div>' +
-      '<span class="badge badge-'+post.status+'">'+post.status+'</span></div>' +
-      '<div class="threads-preview"><div class="threads-meta"><div class="avatar">&#x1F56F;</div>' +
-      '<span class="handle">latviancandles_store</span></div>' +
-      '<div class="threads-body" id="body-'+post.id+'">'+escHtml(post.content)+'</div></div>' +
-      '<div class="char-count'+(over?' over':'')+'" id="chars-'+post.id+'">'+chars+'/500 characters</div>' +
-      (ip ? '<div class="edit-area" id="edit-'+post.id+'"><textarea id="ta-'+post.id+'" oninput="updateChars('+post.id+')">'+escHtml(post.content)+'</textarea>' +
-        '<div class="edit-actions"><button class="btn-save" onclick="saveEdit('+post.id+')">Save</button>' +
-        '<button class="btn-cancel" onclick="cancelEdit('+post.id+')">Cancel</button></div></div>' : '') +
-      '<div class="card-actions">' +
-      (ip ? '<button class="action-btn" onclick="toggleEdit('+post.id+')">Edit</button>' : '') +
-      (ip ? '<button class="action-btn danger" onclick="deletePost('+post.id+')">Delete</button>' : '') +
-      (!ip ? '<button class="action-btn" onclick="copyText('+post.id+')">Copy</button>' : '') +
-      '</div></div>';
-  }).join('');
+    const d = formatDate(post.scheduled_date)
+    const chars = post.content.length
+    const over = chars > 500
+    const isPending = post.status === 'pending'
+
+    const slotLabel = (post.slot || 'morning') === 'morning' ? '🌅 Morning' : '🌙 Evening'
+    const slotClass = (post.slot || 'morning') === 'evening' ? 'evening' : ''
+
+    return `
+    <div class="post-card" id="card-${post.id}">
+      <div class="card-header">
+        <div>
+          <div class="card-date">${d.full}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge-slot ${slotClass}">${slotLabel}</span>
+          <span class="badge badge-${post.status}">${post.status}</span>
+        </div>
+      </div>
+
+      <div class="threads-preview">
+        <div class="threads-meta">
+          <div class="avatar">🕯️</div>
+          <span class="handle">latviancandles_store</span>
+        </div>
+        <div class="threads-body" id="body-${post.id}">${escHtml(post.content)}</div>
+      </div>
+      <div class="char-count ${over ? 'over' : ''}" id="chars-${post.id}">${chars}/500 characters</div>
+
+      <div class="reply-thread">
+        <div class="reply-line-col">
+          <div class="reply-vline"></div>
+          <div class="reply-avatar">🕯️</div>
+        </div>
+        <div class="reply-content">
+          <div class="reply-handle">latviancandles_store</div>
+          <div class="reply-text">Our full collection is at <a href="https://latviancandles.store" target="_blank">latviancandles.store</a></div>
+        </div>
+      </div>
+
+      ${isPending ? `
+      <div class="edit-area" id="edit-${post.id}">
+        <textarea id="ta-${post.id}" oninput="updateChars(${post.id})">${escHtml(post.content)}</textarea>
+        <div class="edit-actions">
+          <button class="btn-save" onclick="saveEdit(${post.id})">Save</button>
+          <button class="btn-cancel" onclick="cancelEdit(${post.id})">Cancel</button>
+        </div>
+      </div>` : ''}
+
+      <div class="card-actions">
+        ${isPending ? `<button class="action-btn" onclick="toggleEdit(${post.id})">✏️ Edit</button>` : ''}
+        ${isPending ? `<button class="action-btn danger" onclick="deletePost(${post.id})">🗑 Delete</button>` : ''}
+        ${!isPending ? `<button class="action-btn" onclick="copyText(${post.id})">📋 Copy</button>` : ''}
+      </div>
+    </div>`
+  }).join('')
 }
 
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').split('\n').join('<br>') }
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')
+}
 
 function toggleEdit(id) {
-  const ea = document.getElementById('edit-'+id);
-  const showing = ea.style.display==='block';
-  ea.style.display = showing ? 'none' : 'block';
-  if (!showing) { document.getElementById('ta-'+id).value = allPosts.find(p=>p.id===id).content; updateChars(id); }
+  const ea = document.getElementById(`edit-${id}`)
+  const showing = ea.style.display === 'block'
+  ea.style.display = showing ? 'none' : 'block'
+  if (!showing) {
+    const post = allPosts.find(p => p.id === id)
+    document.getElementById(`ta-${id}`).value = post.content
+    updateChars(id)
+  }
 }
-function cancelEdit(id) { document.getElementById('edit-'+id).style.display='none'; }
+
+function cancelEdit(id) {
+  document.getElementById(`edit-${id}`).style.display = 'none'
+}
+
 function updateChars(id) {
-  const n = document.getElementById('ta-'+id).value.length;
-  const c = document.getElementById('chars-'+id);
-  c.textContent = n+'/500 characters'; c.className = 'char-count'+(n>500?' over':'');
+  const ta = document.getElementById(`ta-${id}`)
+  const count = document.getElementById(`chars-${id}`)
+  const n = ta.value.length
+  count.textContent = `${n}/500 characters`
+  count.className = `char-count ${n > 500 ? 'over' : ''}`
 }
 
 async function saveEdit(id) {
-  const content = document.getElementById('ta-'+id).value.trim();
-  if (!content) return;
-  const r = await fetch(API, {method:'PATCH', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({id, content})});
-  if (r.ok) { allPosts.find(p=>p.id===id).content=content; document.getElementById('body-'+id).innerHTML=escHtml(content); document.getElementById('edit-'+id).style.display='none'; updateChars(id); showToast('Saved!'); }
-  else showToast('Save failed');
+  const content = document.getElementById(`ta-${id}`).value.trim()
+  if (!content) return
+
+  const res = await fetch(`/api/posts`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, content })
+  })
+
+  if (res.ok) {
+    const post = allPosts.find(p => p.id === id)
+    post.content = content
+    document.getElementById(`body-${id}`).innerHTML = escHtml(content)
+    document.getElementById(`edit-${id}`).style.display = 'none'
+    updateChars(id)
+    showToast('Saved!')
+  } else {
+    showToast('Save failed')
+  }
 }
 
 async function deletePost(id) {
-  if (!confirm('Delete this post?')) return;
-  const r = await fetch(API+'?id='+id, {method:'DELETE', headers:{Authorization:'Bearer '+SECRET}});
-  if (r.ok) { allPosts = allPosts.filter(p=>p.id!==id); render(); showToast('Deleted'); }
+  if (!confirm('Delete this post?')) return
+  const res = await fetch(`${API}?id=${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${SECRET}` }
+  })
+  if (res.ok) {
+    allPosts = allPosts.filter(p => p.id !== id)
+    render()
+    showToast('Deleted')
+  }
 }
 
-function copyText(id) { navigator.clipboard.writeText(allPosts.find(p=>p.id===id).content); showToast('Copied!'); }
+function copyText(id) {
+  const post = allPosts.find(p => p.id === id)
+  navigator.clipboard.writeText(post.content)
+  showToast('Copied!')
+}
 
 function openNewModal() {
-  const t = new Date(); const mm = String(t.getMonth()+1).padStart(2,'0'); const dd = String(t.getDate()).padStart(2,'0');
-  document.getElementById('new-date').value = t.getFullYear()+'-'+mm+'-'+dd;
-  document.getElementById('new-content').value=''; document.getElementById('new-image').value='';
-  document.getElementById('new-modal').classList.add('open');
+  const today = new Date()
+  const yyyy = today.getFullYear()
+  const mm = String(today.getMonth()+1).padStart(2,'0')
+  const dd = String(today.getDate()).padStart(2,'0')
+  document.getElementById('new-date').value = `${yyyy}-${mm}-${dd}`
+  document.getElementById('new-content').value = ''
+  document.getElementById('new-image').value = ''
+  document.getElementById('new-modal').classList.add('open')
 }
-function closeNewModal() { document.getElementById('new-modal').classList.remove('open'); }
+
+function closeNewModal() {
+  document.getElementById('new-modal').classList.remove('open')
+}
 
 async function saveNewPost() {
-  const date = document.getElementById('new-date').value;
-  const content = document.getElementById('new-content').value.trim();
-  const image_url = document.getElementById('new-image').value.trim() || null;
-  if (!date || !content) { showToast('Date and content required'); return; }
-  const r = await fetch(API, {method:'POST', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({scheduled_date:date, content, image_url, status:'pending'})});
-  if (r.ok) { const np = await r.json(); allPosts.push(np); allPosts.sort((a,b)=>a.scheduled_date.localeCompare(b.scheduled_date)); closeNewModal(); render(); showToast('Post added!'); }
-  else showToast('Failed to save');
+  const date = document.getElementById('new-date').value
+  const content = document.getElementById('new-content').value.trim()
+  const slot = document.getElementById('new-slot').value
+  const image_url = document.getElementById('new-image').value.trim() || null
+
+  if (!date || !content) { showToast('Date and content required'); return }
+
+  const res = await fetch(API, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scheduled_date: date, content, image_url, slot, status: 'pending' })
+  })
+
+  if (res.ok) {
+    const newPost = await res.json()
+    allPosts.push(newPost)
+    allPosts.sort((a,b) => a.scheduled_date.localeCompare(b.scheduled_date))
+    closeNewModal()
+    render()
+    showToast('Post added!')
+  } else {
+    showToast('Failed to save')
+  }
 }
 
-function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
-document.getElementById('new-modal').addEventListener('click', e => { if (e.target===document.getElementById('new-modal')) closeNewModal(); });
+function showToast(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), 2000)
+}
+
+document.getElementById('new-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('new-modal')) closeNewModal()
+})
 </script>
 </body>
-  </html>
+</html>
