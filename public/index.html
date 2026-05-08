@@ -170,6 +170,18 @@ header h1 { color: #fff; font-size: 18px; font-weight: 700; }
 .prod-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #52525b; cursor: pointer; user-select: none; }
 .prod-toggle input[type=checkbox] { width: 16px; height: 16px; accent-color: #18181b; cursor: pointer; }
 .prod-order { font-size: 11px; color: #a1a1aa; }
+
+.prod-actions { padding: 0 14px 12px; display: flex; gap: 6px; }
+.prod-action-btn { flex: 1; background: #f4f4f5; border: none; border-radius: 8px; padding: 7px 10px; font-size: 12px; font-weight: 600; color: #3f3f46; cursor: pointer; }
+.prod-action-btn:hover { background: #e4e4e7; }
+.prod-action-btn.post-now { background: #18181b; color: #fff; }
+.prod-action-btn.post-now:hover { background: #3f3f46; }
+.prod-action-btn.posting { background: #6366f1; color: #fff; cursor: wait; }
+.prod-edit-area { display: none; padding: 0 14px 12px; }
+.prod-edit-area textarea { width: 100%; border: 1.5px solid #6366f1; border-radius: 8px; font-size: 13px; padding: 8px 10px; font-family: inherit; resize: vertical; min-height: 100px; outline: none; color: #18181b; }
+.prod-edit-actions { display: flex; gap: 6px; margin-top: 6px; }
+.prod-preview { display: none; margin: 0 14px 12px; background: #f9f9f9; border-radius: 10px; padding: 12px; font-size: 13px; line-height: 1.6; color: #18181b; border-left: 3px solid #6366f1; white-space: pre-wrap; }
+.prod-preview-reply { font-size: 12px; color: #6366f1; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e4e4e7; }
 </style>
 </head>
 <body>
@@ -788,24 +800,84 @@ function renderProducts() {
     var lastClass = p.last_posted_at ? 'posted-date' : ''
     var imgHtml = p.image_url
       ? '<img class="prod-img" src="' + escHtml(p.image_url) + '" loading="lazy" onerror="prodImgErr(this)">'
-        + '<div class="prod-img-placeholder" style="display:none">🕯️</div>'
-      : '<div class="prod-img-placeholder">🕯️</div>'
+      : '<div class="prod-img-placeholder">\u{1F56F}\uFE0F</div>'
+    var replyText = 'Get yours at latviancandles.store/products/' + p.handle
     html += '<div class="prod-card' + (p.active ? '' : ' inactive') + '" data-id="' + p.id + '">'
     html +=   imgHtml
     html +=   '<div class="prod-body">'
     html +=     '<div class="prod-title">' + escHtml(p.title) + '</div>'
-    if (p.price) html += '<div class="prod-price">£' + parseFloat(p.price).toFixed(2) + '</div>'
+    if (p.price) html += '<div class="prod-price">\u00A3' + parseFloat(p.price).toFixed(2) + '</div>'
     html +=     '<div class="prod-desc">' + escHtml(p.description) + '</div>'
     html +=     '<div class="prod-meta ' + lastClass + '">' + lastPosted + '</div>'
     html +=   '</div>'
-    html +=   '<div class="prod-footer">'
-    html +=     '<label class="prod-toggle"><input type="checkbox" ' + (p.active ? 'checked' : '') + ' onchange="toggleProduct(\'' + p.id + '\',this.checked)"> In rotation</label>'
-    html +=     '<span class="prod-order">#' + p.sort_order + '</span>'
-    html +=   '</div>'
+    html +=   '<div class="prod-preview" id="prev-' + p.id + '">' + escHtml(p.description) + '<div class="prod-preview-reply">&#x21A9; ' + escHtml(replyText) + '</div></div>'
+    html +=   '<div class="prod-edit-area" id="edit-' + p.id + '"><textarea id="editta-' + p.id + '">' + escHtml(p.description) + '</textarea><div class="prod-edit-actions"><button class="btn-save" onclick="saveProductDesc(\''+p.id+'\')">Save</button><button class="btn-cancel" onclick="cancelProductEdit(\''+p.id+'\')">Cancel</button></div></div>'
+    html +=   '<div class="prod-actions"><button class="prod-action-btn" onclick="toggleProdPreview(\''+p.id+'\')">Preview</button><button class="prod-action-btn" onclick="openProductEdit(\''+p.id+'\')">Edit text</button><button class="prod-action-btn post-now" id="postnow-'+p.id+'" onclick="postProductNow(\''+p.id+'\')">Post now</button></div>'
+    html +=   '<div class="prod-footer"><label class="prod-toggle"><input type="checkbox" ' + (p.active ? 'checked' : '') + ' onchange="toggleProduct(\''+p.id+'\',this.checked)"> In rotation</label><span class="prod-order">#' + p.sort_order + '</span></div>'
     html += '</div>'
   })
   html += '</div>'
   view.innerHTML = html
+}
+
+function toggleProdPreview(id) {
+  var el = document.getElementById('prev-' + id)
+  el.style.display = el.style.display === 'block' ? 'none' : 'block'
+}
+
+function openProductEdit(id) {
+  document.getElementById('edit-' + id).style.display = 'block'
+  document.getElementById('prev-' + id).style.display = 'none'
+}
+
+function cancelProductEdit(id) {
+  document.getElementById('edit-' + id).style.display = 'none'
+}
+
+function saveProductDesc(id) {
+  var desc = document.getElementById('editta-' + id).value.trim()
+  if (!desc) return
+  fetch(PROD_API, {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + SECRET, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: id, description: desc })
+  })
+  .then(function(r) { return r.json() })
+  .then(function(updated) {
+    var idx = allProducts.findIndex(function(p) { return p.id === id })
+    if (idx !== -1) allProducts[idx] = updated
+    renderProducts()
+    showToast('Description saved')
+  })
+  .catch(function() { showToast('Save failed') })
+}
+
+function postProductNow(id) {
+  var btn = document.getElementById('postnow-' + id)
+  if (!btn || btn.classList.contains('posting')) return
+  btn.classList.add('posting')
+  btn.textContent = 'Posting…'
+  fetch(PROD_API, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + SECRET, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: id })
+  })
+  .then(function(r) { return r.json() })
+  .then(function(d) {
+    if (d.ok) {
+      showToast('Posted to Threads!')
+      loadProducts()
+    } else {
+      showToast('Failed: ' + (d.error || 'unknown'))
+      btn.classList.remove('posting')
+      btn.textContent = 'Post now'
+    }
+  })
+  .catch(function() {
+    showToast('Post failed')
+    btn.classList.remove('posting')
+    btn.textContent = 'Post now'
+  })
 }
 
 function toggleProduct(id, active) {
