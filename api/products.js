@@ -103,7 +103,15 @@ export default async function handler(req, res) {
       if (!published.id) throw new Error('Publish failed: ' + JSON.stringify(published))
 
       await new Promise(r => setTimeout(r, 2000))
-      const replyText = 'Get yours at latviancandles.store/products/' + product.handle
+      const PRODUCT_REPLY_VARIANTS = [
+      'Get yours at latviancandles.store/products/',
+      'Shop this mold at latviancandles.store/products/',
+      'Find it at latviancandles.store/products/',
+      'Order yours at latviancandles.store/products/',
+      'See more at latviancandles.store/products/',
+    ]
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)
+    const replyText = PRODUCT_REPLY_VARIANTS[dayOfYear % PRODUCT_REPLY_VARIANTS.length] + product.handle
       const replyContainer = await createContainer(replyText, null, published.id)
       if (replyContainer.id) {
         await pollStatus(replyContainer.id)

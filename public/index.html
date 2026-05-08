@@ -801,12 +801,14 @@ function renderProducts() {
     var imgHtml = p.image_url
       ? '<img class="prod-img" src="' + escHtml(p.image_url) + '" loading="lazy" onerror="prodImgErr(this)">'
       : '<div class="prod-img-placeholder">\u{1F56F}\uFE0F</div>'
-    var replyText = 'Get yours at latviancandles.store/products/' + p.handle
+    var PROD_REPLY_VARIANTS = ['Get yours at','Shop this mold at','Find it at','Order yours at','See more at']
+    var dayIdx = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000) % PROD_REPLY_VARIANTS.length
+    var replyText = PROD_REPLY_VARIANTS[dayIdx] + ' latviancandles.store/products/' + p.handle
     html += '<div class="prod-card' + (p.active ? '' : ' inactive') + '" data-id="' + p.id + '">'
     html +=   imgHtml
     html +=   '<div class="prod-body">'
     html +=     '<div class="prod-title">' + escHtml(p.title) + '</div>'
-    if (p.price) html += '<div class="prod-price">\u00A3' + parseFloat(p.price).toFixed(2) + '</div>'
+    if (p.price) html += '<div class="prod-price">€' + parseFloat(p.price).toFixed(2) + '</div>'
     html +=     '<div class="prod-desc">' + escHtml(p.description) + '</div>'
     html +=     '<div class="prod-meta ' + lastClass + '">' + lastPosted + '</div>'
     html +=   '</div>'
