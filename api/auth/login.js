@@ -1,9 +1,19 @@
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = ''
+    req.on('data', chunk => (data += chunk))
+    req.on('end', () => resolve(data))
+    req.on('error', reject)
+  })
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
   let body
   try {
-    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+    const raw = await readBody(req)
+    body = JSON.parse(raw)
   } catch {
     return res.status(400).json({ error: 'Invalid JSON' })
   }
