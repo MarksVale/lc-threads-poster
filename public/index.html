@@ -5,165 +5,137 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Latvian Candles — Post Queue</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; min-height: 100vh; color: #1a1a1a; }
-
-  /* LOGIN */
-  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #18181b; }
-  .login-box { background: #27272a; border-radius: 16px; padding: 40px; width: 340px; text-align: center; }
-  .login-box h1 { color: #fff; font-size: 22px; margin-bottom: 6px; }
-  .login-box p { color: #a1a1aa; font-size: 14px; margin-bottom: 28px; }
-  .login-box input { width: 100%; background: #3f3f46; border: 1px solid #52525b; border-radius: 10px; color: #fff; font-size: 15px; padding: 12px 16px; margin-bottom: 12px; outline: none; }
-  .login-box input:focus { border-color: #6366f1; }
-  .login-box button { width: 100%; background: #6366f1; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; padding: 13px; cursor: pointer; }
-  .login-box button:hover { background: #4f46e5; }
-  .login-error { color: #f87171; font-size: 13px; margin-top: 10px; display: none; }
-
-  /* APP */
-  #app { display: none; }
-  header { background: #18181b; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-  header h1 { color: #fff; font-size: 18px; font-weight: 700; }
-  header span { color: #a1a1aa; font-size: 13px; }
-  .header-right { display: flex; align-items: center; gap: 12px; }
-  .btn-add { background: #6366f1; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .btn-add:hover { background: #4f46e5; }
-
-  /* TOOLBAR */
-  .toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px 0; flex-wrap: wrap; gap: 10px; }
-  .filters { display: flex; gap: 8px; flex-wrap: wrap; }
-  .filter-btn { background: #fff; border: 1.5px solid #e4e4e7; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 500; cursor: pointer; color: #52525b; }
-  .filter-btn.active { background: #18181b; color: #fff; border-color: #18181b; }
-  .layout-toggle { display: flex; gap: 4px; background: #fff; border: 1.5px solid #e4e4e7; border-radius: 10px; padding: 3px; }
-  .layout-btn { background: none; border: none; border-radius: 7px; padding: 5px 10px; cursor: pointer; font-size: 14px; color: #71717a; line-height: 1; }
-  .layout-btn.active { background: #18181b; color: #fff; }
-
-  /* BADGES */
-  .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .badge-pending  { background: #fef3c7; color: #92400e; }
-  .badge-approved { background: #dbeafe; color: #1e40af; }
-  .badge-posted   { background: #d1fae5; color: #065f46; }
-  .badge-failed   { background: #fee2e2; color: #991b1b; }
-  .badge-slot { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: #f0f9ff; color: #0369a1; }
-  .badge-slot.evening { background: #faf5ff; color: #7c3aed; }
-
-  /* GRID */
-  .posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; padding: 20px 24px 40px; }
-
-  /* GRID CARD */
-  .post-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: box-shadow 0.15s; }
-  .post-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f4f4f5; }
-  .card-date { font-size: 13px; font-weight: 600; color: #18181b; }
-  .threads-preview { padding: 16px; background: #fff; }
-  .threads-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-  .handle { font-size: 13px; font-weight: 700; color: #18181b; }
-  .threads-body { font-size: 14px; line-height: 1.55; color: #18181b; white-space: pre-wrap; word-break: break-word; padding-left: 46px; }
-  .char-count { padding: 6px 16px 4px 62px; font-size: 11px; color: #a1a1aa; }
-  .char-count.over { color: #ef4444; }
-
-  /* REPLY THREAD */
-  .reply-thread { padding: 0 16px 14px 16px; display: flex; gap: 10px; }
-  .reply-line-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 36px; }
-  .reply-vline { width: 2px; flex: 1; min-height: 12px; background: #e4e4e7; border-radius: 1px; }
-  .reply-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
-  .reply-content { flex: 1; }
-  .reply-handle { font-size: 12px; font-weight: 700; color: #71717a; margin-bottom: 2px; }
-  .reply-text { font-size: 12px; color: #71717a; line-height: 1.4; }
-  .reply-text a { color: #6366f1; text-decoration: none; }
-
-  /* EDIT AREA */
-  .edit-area { display: none; padding: 12px 16px; border-top: 1px solid #f4f4f5; }
-  .edit-area textarea { width: 100%; border: 1.5px solid #e4e4e7; border-radius: 10px; font-size: 14px; line-height: 1.55; padding: 10px 12px; resize: vertical; min-height: 120px; font-family: inherit; color: #18181b; outline: none; }
-  .edit-area textarea:focus { border-color: #6366f1; }
-  .edit-actions { display: flex; gap: 8px; margin-top: 8px; }
-  .btn-save { background: #18181b; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; }
-  .btn-save:hover { background: #3f3f46; }
-  .btn-cancel { background: #f4f4f5; color: #52525b; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
-
-  /* CARD ACTIONS */
-  .card-actions { display: flex; gap: 0; border-top: 1px solid #f4f4f5; }
-  .action-btn { flex: 1; background: none; border: none; padding: 11px; font-size: 12px; font-weight: 500; color: #71717a; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: background 0.1s; }
-  .action-btn:hover { background: #f9f9f9; }
-  .action-btn + .action-btn { border-left: 1px solid #f4f4f5; }
-  .action-btn.approve { color: #1e40af; font-weight: 700; }
-  .action-btn.approve:hover { background: #dbeafe; }
-  .action-btn.danger { color: #ef4444; }
-  .action-btn.danger:hover { background: #fef2f2; }
-
-  /* LIST */
-  .posts-list { display: flex; flex-direction: column; padding: 16px 24px 40px; }
-  .list-item { background: #fff; border: 1px solid #e4e4e7; border-bottom: none; display: grid; grid-template-columns: 140px 100px 1fr 120px auto; align-items: center; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
-  .list-item:first-child { border-radius: 12px 12px 0 0; }
-  .list-item:last-child { border-radius: 0 0 12px 12px; border-bottom: 1px solid #e4e4e7; }
-  .list-item:only-child { border-radius: 12px; border-bottom: 1px solid #e4e4e7; }
-  .list-item:hover { background: #fafafa; }
-  .list-date { font-size: 13px; font-weight: 600; color: #18181b; }
-  .list-preview { font-size: 13px; color: #3f3f46; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .list-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
-  .list-action-btn { background: none; border: 1.5px solid #e4e4e7; border-radius: 7px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: #52525b; white-space: nowrap; }
-  .list-action-btn:hover { background: #f4f4f5; }
-  .list-action-btn.approve-btn { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; font-weight: 600; }
-  .list-action-btn.danger { color: #ef4444; border-color: #fecaca; }
-  .list-action-btn.danger:hover { background: #fef2f2; }
-  .list-edit-row { grid-column: 1 / -1; display: none; padding-top: 10px; border-top: 1px solid #f4f4f5; margin-top: 4px; }
-  .list-edit-row textarea { width: 100%; border: 1.5px solid #6366f1; border-radius: 8px; font-size: 13px; padding: 8px 10px; font-family: inherit; resize: vertical; min-height: 80px; outline: none; }
-  .list-edit-row .edit-actions { margin-top: 6px; }
-
-  /* MODAL */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: #fff; border-radius: 16px; width: 480px; max-width: 95vw; padding: 28px; }
-  .modal h2 { font-size: 18px; margin-bottom: 20px; }
-  .modal label { font-size: 13px; font-weight: 600; color: #52525b; display: block; margin-bottom: 5px; }
-  .modal input, .modal textarea, .modal select { width: 100%; border: 1.5px solid #e4e4e7; border-radius: 10px; font-size: 14px; padding: 10px 12px; font-family: inherit; color: #18181b; outline: none; margin-bottom: 16px; }
-  .modal input:focus, .modal textarea:focus { border-color: #6366f1; }
-  .modal textarea { min-height: 120px; resize: vertical; }
-  .modal-actions { display: flex; gap: 10px; }
-  .btn-primary { flex: 1; background: #18181b; color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn-secondary { background: #f4f4f5; color: #52525b; border: none; border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
-
-  .empty { text-align: center; padding: 60px 20px; color: #a1a1aa; }
-  .loading { text-align: center; padding: 60px 20px; color: #a1a1aa; }
-  .toast { position: fixed; bottom: 24px; right: 24px; background: #18181b; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.2s; z-index: 999; pointer-events: none; }
-  .toast.show { opacity: 1; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; min-height: 100vh; color: #1a1a1a; }
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #18181b; }
+.login-box { background: #27272a; border-radius: 16px; padding: 40px; width: 340px; text-align: center; }
+.login-box h1 { color: #fff; font-size: 22px; margin-bottom: 6px; }
+.login-box p { color: #a1a1aa; font-size: 14px; margin-bottom: 28px; }
+.login-box input { width: 100%; background: #3f3f46; border: 1px solid #52525b; border-radius: 10px; color: #fff; font-size: 15px; padding: 12px 16px; margin-bottom: 12px; outline: none; display: block; }
+.login-box input:focus { border-color: #6366f1; }
+.login-box button { width: 100%; background: #6366f1; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; padding: 13px; cursor: pointer; }
+.login-box button:hover { background: #4f46e5; }
+.login-error { color: #f87171; font-size: 13px; margin-top: 10px; display: none; }
+#app { display: none; }
+header { background: #18181b; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+header h1 { color: #fff; font-size: 18px; font-weight: 700; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header-right span { color: #a1a1aa; font-size: 13px; }
+.btn-add { background: #6366f1; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-add:hover { background: #4f46e5; }
+.toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px 0; flex-wrap: wrap; gap: 10px; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-btn { background: #fff; border: 1.5px solid #e4e4e7; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 500; cursor: pointer; color: #52525b; }
+.filter-btn.active { background: #18181b; color: #fff; border-color: #18181b; }
+.layout-toggle { display: flex; gap: 4px; background: #fff; border: 1.5px solid #e4e4e7; border-radius: 10px; padding: 3px; }
+.layout-btn { background: none; border: none; border-radius: 7px; padding: 5px 10px; cursor: pointer; font-size: 14px; color: #71717a; line-height: 1; }
+.layout-btn.active { background: #18181b; color: #fff; }
+.badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-pending { background: #fef3c7; color: #92400e; }
+.badge-approved { background: #dbeafe; color: #1e40af; }
+.badge-posted { background: #d1fae5; color: #065f46; }
+.badge-failed { background: #fee2e2; color: #991b1b; }
+.badge-slot { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: #f0f9ff; color: #0369a1; }
+.badge-slot.evening { background: #faf5ff; color: #7c3aed; }
+.posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; padding: 20px 24px 40px; }
+.post-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f4f4f5; }
+.card-date { font-size: 13px; font-weight: 600; color: #18181b; }
+.threads-preview { padding: 16px; }
+.threads-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.handle { font-size: 13px; font-weight: 700; color: #18181b; }
+.threads-body { font-size: 14px; line-height: 1.55; color: #18181b; word-break: break-word; padding-left: 46px; }
+.char-count { padding: 6px 16px 4px 62px; font-size: 11px; color: #a1a1aa; }
+.char-count.over { color: #ef4444; }
+.reply-thread { padding: 0 16px 14px 16px; display: flex; gap: 10px; }
+.reply-line-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 36px; }
+.reply-vline { width: 2px; flex: 1; min-height: 12px; background: #e4e4e7; border-radius: 1px; }
+.reply-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.reply-content { flex: 1; }
+.reply-handle { font-size: 12px; font-weight: 700; color: #71717a; margin-bottom: 2px; }
+.reply-text { font-size: 12px; color: #71717a; line-height: 1.4; }
+.reply-text a { color: #6366f1; text-decoration: none; }
+.edit-area { display: none; padding: 12px 16px; border-top: 1px solid #f4f4f5; }
+.edit-area textarea { width: 100%; border: 1.5px solid #e4e4e7; border-radius: 10px; font-size: 14px; line-height: 1.55; padding: 10px 12px; resize: vertical; min-height: 120px; font-family: inherit; color: #18181b; outline: none; }
+.edit-area textarea:focus { border-color: #6366f1; }
+.edit-actions { display: flex; gap: 8px; margin-top: 8px; }
+.btn-save { background: #18181b; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; }
+.btn-cancel { background: #f4f4f5; color: #52525b; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.card-actions { display: flex; border-top: 1px solid #f4f4f5; }
+.action-btn { flex: 1; background: none; border: none; padding: 11px; font-size: 12px; font-weight: 500; color: #71717a; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.action-btn:hover { background: #f9f9f9; }
+.action-btn + .action-btn { border-left: 1px solid #f4f4f5; }
+.action-btn.approve { color: #1e40af; font-weight: 700; }
+.action-btn.approve:hover { background: #dbeafe; }
+.action-btn.danger { color: #ef4444; }
+.action-btn.danger:hover { background: #fef2f2; }
+.posts-list { display: flex; flex-direction: column; padding: 16px 24px 40px; }
+.list-item { background: #fff; border: 1px solid #e4e4e7; border-bottom: none; display: grid; grid-template-columns: 130px 90px 1fr 110px auto; align-items: center; gap: 12px; padding: 12px 16px; }
+.list-item:first-child { border-radius: 12px 12px 0 0; }
+.list-item:last-child { border-radius: 0 0 12px 12px; border-bottom: 1px solid #e4e4e7; }
+.list-item:only-child { border-radius: 12px; border-bottom: 1px solid #e4e4e7; }
+.list-item:hover { background: #fafafa; }
+.list-date { font-size: 13px; font-weight: 600; color: #18181b; }
+.list-preview { font-size: 13px; color: #3f3f46; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.list-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+.list-action-btn { background: none; border: 1.5px solid #e4e4e7; border-radius: 7px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: #52525b; white-space: nowrap; }
+.list-action-btn:hover { background: #f4f4f5; }
+.list-action-btn.approve-btn { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; font-weight: 600; }
+.list-action-btn.danger { color: #ef4444; border-color: #fecaca; }
+.list-action-btn.danger:hover { background: #fef2f2; }
+.list-edit-row { grid-column: 1 / -1; display: none; padding-top: 10px; border-top: 1px solid #f4f4f5; margin-top: 4px; }
+.list-edit-row textarea { width: 100%; border: 1.5px solid #6366f1; border-radius: 8px; font-size: 13px; padding: 8px 10px; font-family: inherit; resize: vertical; min-height: 80px; outline: none; }
+.list-edit-row .edit-actions { margin-top: 6px; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 16px; width: 480px; max-width: 95vw; padding: 28px; }
+.modal h2 { font-size: 18px; margin-bottom: 20px; }
+.modal label { font-size: 13px; font-weight: 600; color: #52525b; display: block; margin-bottom: 5px; }
+.modal input, .modal textarea, .modal select { width: 100%; border: 1.5px solid #e4e4e7; border-radius: 10px; font-size: 14px; padding: 10px 12px; font-family: inherit; color: #18181b; outline: none; margin-bottom: 16px; }
+.modal textarea { min-height: 120px; resize: vertical; }
+.modal-actions { display: flex; gap: 10px; }
+.btn-primary { flex: 1; background: #18181b; color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.btn-secondary { background: #f4f4f5; color: #52525b; border: none; border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.empty { text-align: center; padding: 60px 20px; color: #a1a1aa; }
+.loading { text-align: center; padding: 60px 20px; color: #a1a1aa; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: #18181b; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.2s; z-index: 999; pointer-events: none; }
+.toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
 <div id="login-screen">
   <div class="login-box">
-    <h1>🕯️ Latvian Candles</h1>
+    <h1>Latvian Candles</h1>
     <p>Post Queue Manager</p>
     <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
     <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
     <button id="login-btn">Sign in</button>
-    <div class="login-error" id="login-error">Wrong email or password.</div>
+    <div class="login-error" id="login-error"></div>
   </div>
 </div>
 
 <div id="app">
   <header>
-    <div><h1>🕯️ Post Queue</h1></div>
+    <h1>Post Queue</h1>
     <div class="header-right">
       <span id="post-count"></span>
-      <button class="btn-add" onclick="openNewModal()">+ New post</button>
+      <button class="btn-add" id="btn-new-post">+ New post</button>
     </div>
   </header>
-
   <div class="toolbar">
     <div class="filters">
-      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
-      <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
-      <button class="filter-btn" onclick="setFilter('approved',this)">Approved</button>
-      <button class="filter-btn" onclick="setFilter('posted',this)">Posted</button>
+      <button class="filter-btn active" id="f-all">All</button>
+      <button class="filter-btn" id="f-pending">Pending</button>
+      <button class="filter-btn" id="f-approved">Approved</button>
+      <button class="filter-btn" id="f-posted">Posted</button>
     </div>
     <div class="layout-toggle">
-      <button class="layout-btn" id="btn-grid" onclick="setLayout('grid')" title="Grid">⊞</button>
-      <button class="layout-btn" id="btn-list" onclick="setLayout('list')" title="List">☰</button>
+      <button class="layout-btn" id="btn-grid">Grid</button>
+      <button class="layout-btn" id="btn-list">List</button>
     </div>
   </div>
-
   <div id="posts-grid"><div class="loading">Loading posts...</div></div>
 </div>
 
@@ -174,16 +146,16 @@
     <input type="date" id="new-date" />
     <label>Slot</label>
     <select id="new-slot">
-      <option value="morning">🌅 Morning (10:00 Riga)</option>
-      <option value="evening">🌙 Evening (20:00 Riga)</option>
+      <option value="morning">Morning (10:00 Riga)</option>
+      <option value="evening">Evening (20:00 Riga)</option>
     </select>
     <label>Content</label>
     <textarea id="new-content" placeholder="Write your post..."></textarea>
     <label>Image URL (optional)</label>
     <input type="url" id="new-image" placeholder="https://..." />
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeNewModal()">Cancel</button>
-      <button class="btn-primary" onclick="saveNewPost()">Save to queue</button>
+      <button class="btn-secondary" id="btn-cancel-modal">Cancel</button>
+      <button class="btn-primary" id="btn-save-modal">Save to queue</button>
     </div>
   </div>
 </div>
@@ -191,152 +163,260 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = '/api/posts'
-let SECRET = ''
-let allPosts = []
-let currentFilter = 'all'
-let currentLayout = localStorage.getItem('lc_layout') || 'grid'
+var API = '/api/posts';
+var SECRET = '';
+var allPosts = [];
+var currentFilter = 'all';
+var currentLayout = 'grid';
+try { currentLayout = localStorage.getItem('lc_layout') || 'grid'; } catch(e) {}
 
-const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-function formatDate(s) {
-  const [y,m,d] = s.split('-').map(Number)
-  const dt = new Date(y, m-1, d)
-  return { short: `${d} ${MONTHS[m-1]}`, day: DAYS[dt.getDay()], full: `${DAYS[dt.getDay()]}, ${d} ${MONTHS[m-1]} ${y}` }
+function esc(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').split('\n').join('<br>');
 }
 
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').split('\n').join('<br>')
+function fmtDate(s) {
+  var p = s.split('-'), y = +p[0], m = +p[1], d = +p[2];
+  var dt = new Date(y, m-1, d);
+  return { short: d+' '+MONTHS[m-1], day: DAYS[dt.getDay()], full: DAYS[dt.getDay()]+', '+d+' '+MONTHS[m-1]+' '+y };
 }
 
-async function login() {
-  const errEl = document.getElementById('login-error')
-  try {
-    const email = document.getElementById('login-email').value.trim()
-    const password = document.getElementById('login-password').value
-    if (!email || !password) return
-    errEl.style.display = 'none'
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    })
-    if (!res.ok) {
-      errEl.textContent = 'Wrong email or password.'
-      errEl.style.display = 'block'
-      return
-    }
-    const data = await res.json()
-    SECRET = data.token
-    sessionStorage.setItem('lc_secret', SECRET)
-    await loadPosts()
-  } catch(e) {
-    errEl.textContent = 'Error: ' + e.message
-    errEl.style.display = 'block'
-  }
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2000);
 }
 
-async function loadPosts() {
-  const res = await fetch(API, { headers: { Authorization: 'Bearer ' + SECRET } })
-  if (!res.ok) { sessionStorage.removeItem('lc_secret'); return }
-  allPosts = await res.json()
-  document.getElementById('login-screen').style.display = 'none'
-  document.getElementById('app').style.display = 'block'
-  render()
+function showLogin(msg) {
+  var e = document.getElementById('login-error');
+  e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none';
 }
 
-document.getElementById('login-btn').addEventListener('click', login)
-document.getElementById('login-password').addEventListener('keydown', function(e) { if (e.key === 'Enter') login() })
-document.getElementById('login-email').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-password').focus() })
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  render();
+}
 
-var saved = sessionStorage.getItem('lc_secret')
-if (saved) { SECRET = saved; loadPosts() }
+function login() {
+  var email = document.getElementById('login-email').value.trim();
+  var pw = document.getElementById('login-password').value;
+  if (!email || !pw) return;
+  showLogin('');
+  fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({email:email, password:pw})
+  })
+  .then(function(r) {
+    if (!r.ok) { showLogin('Wrong email or password.'); return null; }
+    return r.json();
+  })
+  .then(function(d) {
+    if (!d) return;
+    SECRET = d.token;
+    try { sessionStorage.setItem('lc_secret', SECRET); } catch(e) {}
+    loadPosts();
+  })
+  .catch(function(e) { showLogin('Error: ' + e.message); });
+}
+
+function loadPosts() {
+  fetch(API, {headers:{Authorization:'Bearer '+SECRET}})
+  .then(function(r) {
+    if (!r.ok) { try{sessionStorage.removeItem('lc_secret');}catch(e){} return null; }
+    return r.json();
+  })
+  .then(function(d) {
+    if (!d) return;
+    allPosts = d;
+    showApp();
+  })
+  .catch(function(e){ console.error(e); });
+}
+
+document.getElementById('login-btn').addEventListener('click', login);
+document.getElementById('login-email').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('login-password').focus(); });
+document.getElementById('login-password').addEventListener('keydown', function(e){ if(e.key==='Enter') login(); });
+
+(function(){
+  try { var s = sessionStorage.getItem('lc_secret'); if(s){ SECRET=s; loadPosts(); } } catch(e){}
+})();
+
+document.getElementById('f-all').addEventListener('click', function(){ setFilter('all',this); });
+document.getElementById('f-pending').addEventListener('click', function(){ setFilter('pending',this); });
+document.getElementById('f-approved').addEventListener('click', function(){ setFilter('approved',this); });
+document.getElementById('f-posted').addEventListener('click', function(){ setFilter('posted',this); });
+document.getElementById('btn-grid').addEventListener('click', function(){ setLayout('grid'); });
+document.getElementById('btn-list').addEventListener('click', function(){ setLayout('list'); });
+document.getElementById('btn-new-post').addEventListener('click', openNewModal);
+document.getElementById('btn-cancel-modal').addEventListener('click', closeNewModal);
+document.getElementById('btn-save-modal').addEventListener('click', saveNewPost);
+document.getElementById('new-modal').addEventListener('click', function(e){ if(e.target===this) closeNewModal(); });
 
 function setFilter(f, el) {
-  currentFilter = f
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
-  el.classList.add('active')
-  render()
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  el.classList.add('active');
+  render();
 }
 
 function setLayout(l) {
-  currentLayout = l
-  localStorage.setItem('lc_layout', l)
-  document.getElementById('btn-grid').classList.toggle('active', l === 'grid')
-  document.getElementById('btn-list').classList.toggle('active', l === 'list')
-  render()
+  currentLayout = l;
+  try { localStorage.setItem('lc_layout', l); } catch(e) {}
+  document.getElementById('btn-grid').classList.toggle('active', l==='grid');
+  document.getElementById('btn-list').classList.toggle('active', l==='list');
+  render();
 }
 
 function render() {
-  const posts = currentFilter === 'all' ? allPosts : allPosts.filter(p => p.status === currentFilter)
-  const pending = allPosts.filter(p => p.status === 'pending').length
-  document.getElementById('post-count').textContent = `${pending} pending`
-  document.getElementById('btn-grid').classList.toggle('active', currentLayout === 'grid')
-  document.getElementById('btn-list').classList.toggle('active', currentLayout === 'list')
+  var posts = currentFilter==='all' ? allPosts : allPosts.filter(function(p){ return p.status===currentFilter; });
+  var pending = allPosts.filter(function(p){ return p.status==='pending'; }).length;
+  document.getElementById('post-count').textContent = pending+' pending';
+  document.getElementById('btn-grid').classList.toggle('active', currentLayout==='grid');
+  document.getElementById('btn-list').classList.toggle('active', currentLayout==='list');
 
-  const grid = document.getElementById('posts-grid')
-  if (!posts.length) { grid.className = ''; grid.innerHTML = '<div class="empty">No posts here.</div>'; return }
+  var grid = document.getElementById('posts-grid');
+  if (!posts.length) { grid.className=''; grid.innerHTML='<div class="empty">No posts here.</div>'; return; }
 
   if (currentLayout === 'list') {
-    grid.className = 'posts-list'
-    grid.innerHTML = posts.map(post => {
-      const d = formatDate(post.scheduled_date)
-      const ip = post.status === 'pending'
-      const ia = post.status === 'approved'
-      const slot = post.slot || 'morning'
-      const slotIcon = slot === 'morning' ? '🌅' : '🌙'
-      const slotClass = slot === 'evening' ? 'evening' : ''
-      return `<div class="list-item" id="card-${post.id}">
-        <div>
-          <div class="list-date">${d.short} <span style="color:#a1a1aa;font-weight:400">${d.day.slice(0,3)}</span></div>
-          <span class="badge-slot ${slotClass}" style="margin-top:4px;display:inline-block">${slotIcon} ${slot}</span>
-        </div>
-        <span class="badge badge-${post.status}">${post.status}</span>
-        <div class="list-preview" id="body-${post.id}">${escHtml(post.content)}</div>
-        <div style="font-size:11px;color:#a1a1aa;white-space:nowrap">↩ latviancandles.store</div>
-        <div class="list-actions">
-          ${ip ? `<button class="list-action-btn approve-btn" onclick="approvePost(${post.id})">✓ Approve</button>` : ''}
-          ${ip ? `<button class="list-action-btn" onclick="toggleListEdit(${post.id})">✏️</button>` : ''}
-          ${ia ? `<button class="list-action-btn danger" onclick="unapprovePost(${post.id})">↩ Undo</button>` : ''}
-          ${ip ? `<button class="list-action-btn danger" onclick="deletePost(${post.id})">🗑</button>` : ''}
-          ${post.status === 'posted' ? `<button class="list-action-btn" onclick="copyText(${post.id})">📋</button>` : ''}
-        </div>
-        <div class="list-edit-row" id="edit-${post.id}">
-          <textarea id="ta-${post.id}">${escHtml(post.content)}</textarea>
-          <div class="edit-actions">
-            <button class="btn-save" onclick="saveEdit(${post.id})">Save</button>
-            <button class="btn-cancel" onclick="cancelEdit(${post.id})">Cancel</button>
-          </div>
-        </div>
-      </div>`
-    }).join('')
-    return
+    grid.className = 'posts-list';
+    var html = '';
+    for (var i=0; i<posts.length; i++) {
+      var p = posts[i];
+      var d = fmtDate(p.scheduled_date);
+      var ip = p.status==='pending', ia = p.status==='approved';
+      var slot = p.slot || 'morning';
+      var sc = slot==='evening' ? ' evening' : '';
+      html += '<div class="list-item" id="card-'+p.id+'">';
+      html += '<div><div class="list-date">'+d.short+' <span style="color:#a1a1aa;font-weight:400">'+d.day.slice(0,3)+'</span></div>';
+      html += '<span class="badge-slot'+sc+'" style="margin-top:4px;display:inline-block">'+(slot==='morning'?'Morning':'Evening')+'</span></div>';
+      html += '<span class="badge badge-'+p.status+'">'+p.status+'</span>';
+      html += '<div class="list-preview" id="body-'+p.id+'">'+esc(p.content)+'</div>';
+      html += '<div style="font-size:11px;color:#a1a1aa">latviancandles.store</div>';
+      html += '<div class="list-actions">';
+      if (ip) html += '<button class="list-action-btn approve-btn" onclick="approvePost('+p.id+')">Approve</button>';
+      if (ip) html += '<button class="list-action-btn" onclick="toggleListEdit('+p.id+')">Edit</button>';
+      if (ia) html += '<button class="list-action-btn danger" onclick="unapprovePost('+p.id+')">Undo</button>';
+      if (ip) html += '<button class="list-action-btn danger" onclick="deletePost('+p.id+')">Del</button>';
+      if (p.status==='posted') html += '<button class="list-action-btn" onclick="copyText('+p.id+')">Copy</button>';
+      html += '</div>';
+      html += '<div class="list-edit-row" id="edit-'+p.id+'">';
+      html += '<textarea id="ta-'+p.id+'"></textarea>';
+      html += '<div class="edit-actions"><button class="btn-save" onclick="saveEdit('+p.id+')">Save</button>';
+      html += '<button class="btn-cancel" onclick="cancelEdit('+p.id+')">Cancel</button></div></div></div>';
+    }
+    grid.innerHTML = html;
+    return;
   }
 
-  grid.className = 'posts-grid'
-  grid.innerHTML = posts.map(post => {
-    const d = formatDate(post.scheduled_date)
-    const chars = post.content.length
-    const over = chars > 500
-    const ip = post.status === 'pending'
-    const ia = post.status === 'approved'
-    const slot = post.slot || 'morning'
-    const slotLabel = slot === 'morning' ? '🌅 Morning' : '🌙 Evening'
-    const slotClass = slot === 'evening' ? 'evening' : ''
-    return `<div class="post-card" id="card-${post.id}">
-      <div class="card-header">
-        <div class="card-date">${d.full}</div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <span class="badge-slot ${slotClass}">${slotLabel}</span>
-          <span class="badge badge-${post.status}">${post.status}</span>
-        </div>
-      </div>
-      <div class="threads-preview">
-        <div class="threads-meta">
-          <div class="avatar">🕯️</div>
-          <span class="handle">latviancandles_store</span>
-        </div>
-        <div class="threads-body" id="body-${post.id}">${escHtml(post.content)}</div>
-      </div>
-      <div class="char-count ${over ? 'over' : ''}" id="chars-${p
+  grid.className = 'posts-grid';
+  var html = '';
+  for (var i=0; i<posts.length; i++) {
+    var p = posts[i];
+    var d = fmtDate(p.scheduled_date);
+    var chars = (p.content||'').length;
+    var ip = p.status==='pending', ia = p.status==='approved';
+    var slot = p.slot || 'morning';
+    var sc = slot==='evening' ? ' evening' : '';
+    html += '<div class="post-card" id="card-'+p.id+'">';
+    html += '<div class="card-header"><div class="card-date">'+d.full+'</div>';
+    html += '<div style="display:flex;gap:6px;align-items:center">';
+    html += '<span class="badge-slot'+sc+'">'+(slot==='morning'?'Morning':'Evening')+'</span>';
+    html += '<span class="badge badge-'+p.status+'">'+p.status+'</span></div></div>';
+    html += '<div class="threads-preview">';
+    html += '<div class="threads-meta"><div class="avatar">LC</div><span class="handle">latviancandles_store</span></div>';
+    html += '<div class="threads-body" id="body-'+p.id+'">'+esc(p.content)+'</div></div>';
+    html += '<div class="char-count'+(chars>500?' over':'')+'" id="chars-'+p.id+'">'+chars+'/500 characters</div>';
+    html += '<div class="reply-thread"><div class="reply-line-col"><div class="reply-vline"></div><div class="reply-avatar">LC</div></div>';
+    html += '<div class="reply-content"><div class="reply-handle">latviancandles_store</div>';
+    html += '<div class="reply-text">Our full collection is at <a href="https://latviancandles.store" target="_blank">latviancandles.store</a></div></div></div>';
+    if (ip) {
+      html += '<div class="edit-area" id="edit-'+p.id+'">';
+      html += '<textarea id="ta-'+p.id+'" oninput="updateChars('+p.id+')"></textarea>';
+      html += '<div class="edit-actions"><button class="btn-save" onclick="saveEdit('+p.id+')">Save</button>';
+      html += '<button class="btn-cancel" onclick="cancelEdit('+p.id+')">Cancel</button></div></div>';
+    }
+    html += '<div class="card-actions">';
+    if (ip) html += '<button class="action-btn approve" onclick="approvePost('+p.id+')">Approve</button>';
+    if (ip) html += '<button class="action-btn" onclick="toggleEdit('+p.id+')">Edit</button>';
+    if (ip) html += '<button class="action-btn danger" onclick="deletePost('+p.id+')">Delete</button>';
+    if (ia) html += '<button class="action-btn danger" onclick="unapprovePost('+p.id+')">Undo</button>';
+    if (p.status==='posted') html += '<button class="action-btn" onclick="copyText('+p.id+')">Copy</button>';
+    html += '</div></div>';
+  }
+  grid.innerHTML = html;
+}
+
+function toggleEdit(id) {
+  var ea = document.getElementById('edit-'+id);
+  var open = ea.style.display==='block';
+  ea.style.display = open ? 'none' : 'block';
+  if (!open) { var p=allPosts.find(function(x){return x.id===id;}); if(p) document.getElementById('ta-'+id).value=p.content; updateChars(id); }
+}
+function toggleListEdit(id) {
+  var el = document.getElementById('edit-'+id);
+  var open = el.style.display==='block';
+  el.style.display = open ? 'none' : 'block';
+  if (!open) { var p=allPosts.find(function(x){return x.id===id;}); if(p) document.getElementById('ta-'+id).value=p.content; }
+}
+function cancelEdit(id) { document.getElementById('edit-'+id).style.display='none'; }
+function updateChars(id) {
+  var n = document.getElementById('ta-'+id).value.length;
+  var el = document.getElementById('chars-'+id);
+  if (el) { el.textContent=n+'/500 characters'; el.className='char-count'+(n>500?' over':''); }
+}
+function saveEdit(id) {
+  var content = document.getElementById('ta-'+id).value.trim();
+  if (!content) return;
+  fetch(API, {method:'PATCH', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({id:id,content:content})})
+  .then(function(r){
+    if (r.ok) {
+      var p=allPosts.find(function(x){return x.id===id;}); if(p) p.content=content;
+      var b=document.getElementById('body-'+id); if(b) b.innerHTML=esc(content);
+      cancelEdit(id); updateChars(id); toast('Saved!');
+    } else toast('Save failed');
+  }).catch(function(){ toast('Save failed'); });
+}
+function approvePost(id) {
+  fetch(API, {method:'PATCH', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({id:id,status:'approved'})})
+  .then(function(r){ if(r.ok){var p=allPosts.find(function(x){return x.id===id;});if(p)p.status='approved';render();toast('Approved!');} else toast('Failed'); });
+}
+function unapprovePost(id) {
+  fetch(API, {method:'PATCH', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({id:id,status:'pending'})})
+  .then(function(r){ if(r.ok){var p=allPosts.find(function(x){return x.id===id;});if(p)p.status='pending';render();toast('Moved to pending.');} else toast('Failed'); });
+}
+function deletePost(id) {
+  if (!confirm('Delete this post?')) return;
+  fetch(API+'?id='+id, {method:'DELETE', headers:{Authorization:'Bearer '+SECRET}})
+  .then(function(r){ if(r.ok){allPosts=allPosts.filter(function(x){return x.id!==id;});render();toast('Deleted');} });
+}
+function copyText(id) {
+  var p=allPosts.find(function(x){return x.id===id;});
+  if(p) navigator.clipboard.writeText(p.content);
+  toast('Copied!');
+}
+function openNewModal() {
+  var t=new Date(), y=t.getFullYear(), m=String(t.getMonth()+1).padStart(2,'0'), d=String(t.getDate()).padStart(2,'0');
+  document.getElementById('new-date').value=y+'-'+m+'-'+d;
+  document.getElementById('new-content').value='';
+  document.getElementById('new-image').value='';
+  document.getElementById('new-modal').classList.add('open');
+}
+function closeNewModal() { document.getElementById('new-modal').classList.remove('open'); }
+function saveNewPost() {
+  var date=document.getElementById('new-date').value;
+  var content=document.getElementById('new-content').value.trim();
+  var slot=document.getElementById('new-slot').value;
+  var img=document.getElementById('new-image').value.trim()||null;
+  if (!date||!content) { toast('Date and content required'); return; }
+  fetch(API, {method:'POST', headers:{Authorization:'Bearer '+SECRET,'Content-Type':'application/json'}, body:JSON.stringify({scheduled_date:date,content:content,image_url:img,slot:slot,status:'pending'})})
+  .then(function(r){ return r.ok ? r.json() : null; })
+  .then(function(p){ if(!p){toast('Failed');return;} allPosts.push(p); allPosts.sort(function(a,b){return a.scheduled_date.localeCompare(b.scheduled_date);}); closeNewModal(); render(); toast('Post added!'); })
+  .catch(function(){ toast('Failed'); });
+}
+</script>
+</body>
+</html>
