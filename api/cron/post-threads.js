@@ -120,7 +120,7 @@ export default async function handler(req, res) {
     // Step 4: Post a reply with the store link
     try {
       const replyContainer = await createContainer(
-        'Our full collection is at latviancandles.store?utm_source=threads&utm_medium=social&utm_campaign=daily',
+        'Our full collection is at latviancandles.store',
         null,
         published.id
       )
