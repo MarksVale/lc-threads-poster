@@ -80,11 +80,11 @@ export default async function handler(req, res) {
   const today = todayRiga()
   const slot = req.query?.slot || 'morning'
 
-  // Fetch the next pending post for this slot scheduled for today or earlier
+  // Fetch the next approved post for this slot scheduled for today or earlier
   const { data: post, error: fetchError } = await supabase
     .from('threads_posts')
     .select('*')
-    .eq('status', 'pending')
+    .eq('status', 'approved')
     .eq('slot', slot)
     .lte('scheduled_date', today)
     .order('scheduled_date', { ascending: true })
@@ -146,4 +146,4 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      post_id: published.id,
+      post_id: published.i

@@ -222,8 +222,9 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .badge-pending { background: #fef3c7; color: #92400e; }
-  .badge-posted  { background: #d1fae5; color: #065f46; }
+  .badge-pending  { background: #fef3c7; color: #92400e; }
+  .badge-approved { background: #dbeafe; color: #1e40af; }
+  .badge-posted   { background: #d1fae5; color: #065f46; }
 
   /* Threads-style preview */
   .threads-preview {
@@ -485,6 +486,7 @@
     <div class="filters">
       <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
       <button class="filter-btn" onclick="setFilter('pending', this)">Pending</button>
+      <button class="filter-btn" onclick="setFilter('approved', this)">Approved</button>
       <button class="filter-btn" onclick="setFilter('posted', this)">Posted</button>
     </div>
     <div class="layout-toggle">
@@ -626,9 +628,11 @@ function render() {
         <div class="list-preview" id="body-${post.id}">${escHtml(post.content)}</div>
         <div style="font-size:11px;color:#a1a1aa;align-self:center;white-space:nowrap">↩ store link</div>
         <div class="list-actions">
+          ${isPending ? `<button class="list-action-btn" style="background:#dbeafe;color:#1e40af;border-color:#bfdbfe;font-weight:600" onclick="approvePost(${post.id})">✓ Approve</button>` : ''}
           ${isPending ? `<button class="list-action-btn" onclick="toggleListEdit(${post.id})">✏️</button>` : ''}
           ${isPending ? `<button class="list-action-btn danger" onclick="deletePost(${post.id})">🗑</button>` : ''}
-          ${!isPending ? `<button class="list-action-btn" onclick="copyText(${post.id})">📋</button>` : ''}
+          ${!isPending && post.status !== 'posted' ? `<button class="list-action-btn" onclick="copyText(${post.id})">📋</button>` : ''}
+          ${post.status === 'posted' ? `<button class="list-action-btn" onclick="copyText(${post.id})">📋</button>` : ''}
         </div>
         ${isPending ? `
         <div id="edit-${post.id}" style="grid-column:1/-1;display:none;padding-top:8px;border-top:1px solid #f4f4f5;margin-top:4px">
@@ -638,20 +642,3 @@ function render() {
             <button class="btn-cancel" onclick="cancelEdit(${post.id})">Cancel</button>
           </div>
         </div>` : ''}
-      </div>`
-    }).join('')
-    return
-  }
-
-  // GRID view
-  grid.className = 'posts-grid'
-  grid.innerHTML = posts.map(post => {
-    const d = formatDate(post.scheduled_date)
-    const chars = post.content.length
-    const over = chars > 500
-    const isPending = post.status === 'pending'
-    const slotLabel = (post.slot || 'morning') === 'morning' ? '🌅 Morning' : '🌙 Evening'
-    const slotClass = (post.slot || 'morning') === 'evening' ? 'evening' : ''
-
-    return `
-    <div class="po
