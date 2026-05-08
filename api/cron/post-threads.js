@@ -73,12 +73,14 @@ export default async function handler(req, res) {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
   const today = todayRiga()
+  const slot = req.query?.slot || 'morning'
 
-  // Fetch the next pending post scheduled for today or earlier
+  // Fetch the next pending post for this slot scheduled for today or earlier
   const { data: post, error: fetchError } = await supabase
     .from('threads_posts')
     .select('*')
     .eq('status', 'pending')
+    .eq('slot', slot)
     .lte('scheduled_date', today)
     .order('scheduled_date', { ascending: true })
     .limit(1)
@@ -149,8 +151,4 @@ export default async function handler(req, res) {
     await supabase
       .from('threads_posts')
       .update({ status: 'failed' })
-      .eq('id', post.id)
-
-    return res.status(500).json({ error: err.message })
-  }
-}
+      .e
